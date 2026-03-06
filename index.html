@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Dead & Stuck Pixel Fix — Piksel Onarım Aracı</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Ölü ve sıkışmış pikselleri onarın. Sürüklenebilir, boyutlandırılabilir, çoklu kare ve 4 farklı çözme modu.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ═══════════════════════ RESET & BASE ═══════════════════════ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #000;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #fixScreen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+        }
+
+        /* ═══════════════════════ CONTROL PANEL ═══════════════════════ */
+        #controlPanel {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 1000;
+            background: rgba(15, 15, 25, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 20px;
+            min-width: 280px;
+            color: #e0e0e0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        #controlPanel.hidden {
+            opacity: 0;
+            transform: translateX(20px);
+            pointer-events: none;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 8px #00ff88;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 8px #00ff88;
+            }
+
+            50% {
+                opacity: 0.5;
+                box-shadow: 0 0 16px #00ff88;
+            }
+        }
+
+        .control-group {
+            margin-bottom: 14px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 8px;
+        }
+
+        /* ─── Kare Sayısı ─── */
+        .count-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .count-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .count-btn:hover {
+            background: rgba(0, 255, 136, 0.15);
+            border-color: rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+            transform: scale(1.08);
+        }
+
+        .count-btn:active {
+            transform: scale(0.95);
+        }
+
+        .count-display {
+            font-size: 22px;
+            font-weight: 800;
+            color: #00ff88;
+            min-width: 30px;
+            text-align: center;
+            text-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+        }
+
+        /* ─── Slider ─── */
+        .size-slider-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            transition: transform 0.15s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #00ff88;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .size-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #00ff88;
+            min-width: 46px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ─── Mod Butonları ─── */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .mode-btn {
+            padding: 8px 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .mode-btn.active {
+            background: rgba(0, 255, 136, 0.12);
+            border-color: rgba(0, 255, 136, 0.35);
+            color: #00ff88;
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.15);
+        }
+
+        /* ─── Timer ─── */
+        .timer-display {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            padding: 8px 0 2px;
+        }
+
+        .timer-label {
+            font-size: 10px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
+        }
+
+        /* ─── Separator ─── */
+        .separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 12px 0;
+        }
+
+        /* ═══════════════════════ CANVAS FRAME ═══════════════════════ */
+        .canvas-frame {
+            position: absolute;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: move;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.08), 0 4px 20px rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .canvas-frame:hover {
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.15), 0 4px 24px rgba(0, 0, 0, 0.7);
+        }
+
+        .canvas-frame:active {
+            box-shadow: 0 0 50px rgba(0, 255, 136, 0.25), 0 4px 28px rgba(0, 0, 0, 0.8);
+        }
+
+        .canvas-frame canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ═══════════════════════ BOTTOM BAR ═══════════════════════ */
+        #bottomBar {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+
+        .bar-btn {
+            height: 44px;
+            padding: 0 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 15, 25, 0.75);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .bar-btn:hover {
+            background: rgba(25, 25, 40, 0.85);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .bar-btn:active {
+            transform: translateY(0);
+        }
+
+        .bar-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* ═══════════════════════ TOGGLE PANEL BTN ═══════════════════════ */
+        #togglePanelBtn {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 999;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 15, 25, 0.8);
+            backdrop-filter: blur(16px);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        #togglePanelBtn:hover {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+        }
+
+        /* ═══════════════════════ DRAG TIP ═══════════════════════ */
+        #dragTip {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(15, 15, 25, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 14px 24px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            max-width: 420px;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #dragTip.hide {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            pointer-events: none;
+        }
+
+        .tip-icon {
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        /* ─── Pause Button ─── */
+        .bar-btn.paused {
+            background: rgba(255, 60, 60, 0.2);
+            border-color: rgba(255, 60, 60, 0.4);
+            color: #ff6b6b;
+        }
+
+        .bar-btn.paused:hover {
+            background: rgba(255, 60, 60, 0.3);
+            color: #ff8888;
+        }
+
+        .timer-display.paused {
+            color: #ff6b6b;
+            animation: blink-timer 1s infinite;
+        }
+
+        @keyframes blink-timer {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+
+
+        /* ═══════════════════════ ANIMATIONS ═══════════════════════ */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .canvas-frame {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+
+        .canvas-frame.removing {
+            animation: fadeOut 0.3s ease forwards;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="fixScreen">
+        <!-- Canvas frames will be dynamically added here -->
+    </div>
+
+    <!-- ═══════ CONTROL PANEL ═══════ -->
+    <div id="controlPanel">
+        <div class="panel-title">Piksel Onarım</div>
+
+        <!-- Kare Sayısı -->
+        <div class="control-group">
+            <div class="control-label">Kare Sayısı</div>
+            <div class="count-control">
+                <button class="count-btn" id="decreaseCount" title="Kare azalt">−</button>
+                <span class="count-display" id="countDisplay">1</span>
+                <button class="count-btn" id="increaseCount" title="Kare ekle">+</button>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Boyut -->
+        <div class="control-group">
+            <div class="control-label">Boyut</div>
+            <div class="size-slider-wrapper">
+                <input type="range" id="sizeSlider" min="128" max="512" value="256" step="16">
+                <span class="size-value" id="sizeValue">256px</span>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Mod Seçimi -->
+        <div class="control-group">
+            <div class="control-label">Çözme Modu</div>
+            <div class="mode-grid">
+                <button class="mode-btn active" data-mode="classic">⚡ Klasik</button>
+                <button class="mode-btn" data-mode="fast">🚀 Hızlı</button>
+                <button class="mode-btn" data-mode="colorcycle">🌈 Renk Döngüsü</button>
+                <button class="mode-btn" data-mode="bw">◐ Siyah-Beyaz</button>
+            </div>
+
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Timer -->
+        <div class="control-group">
+            <div class="control-label">Çalışma Süresi</div>
+            <div class="timer-display" id="timerDisplay">00:00</div>
+            <div class="timer-label">DAKİKA : SANİYE</div>
+        </div>
+    </div>
+
+    <!-- Toggle panel button (shown when panel is hidden) -->
+    <button id="togglePanelBtn" title="Paneli aç/kapat">⚙</button>
+
+    <!-- ═══════ BOTTOM BAR ═══════ -->
+    <div id="bottomBar">
+        <button class="bar-btn" id="fullscreenBtn" title="Tam ekran">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+            </svg>
+            Tam Ekran
+        </button>
+        <button class="bar-btn" id="pauseBtn" title="Duraklat / Devam et">
+            <svg id="pauseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+            </svg>
+            <svg id="playIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span id="pauseBtnText">Duraklat</span>
+        </button>
+        <button class="bar-btn" id="hidePanelBtn" title="Paneli gizle/göster">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Panel Gizle
+        </button>
+    </div>
+
+    <!-- ═══════ DRAG TIP ═══════ -->
+    <div id="dragTip">
+        <span class="tip-icon">💡</span>
+        Pixel onarıcıyı sıkışmış pikselin üzerine sürükleyin ve en az <strong>10 dakika</strong> çalışır durumda
+        bırakın.
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════
+        const STORAGE_KEY = 'pixelfix_state';
+
+        const state = {
+            canvasFrames: [],
+            intervals: [],
+            count: 1,
+            size: 256,
+            mode: 'classic',
+            startTime: Date.now(),
+            elapsedBeforePause: 0,
+            timerInterval: null,
+            panelVisible: true,
+            paused: false,
+            colorCycleIndex: 0,
+            colorCycleFrame: 0
+        };
+
+        const MODES = {
+            classic: { interval: 10, label: 'Klasik', speed: 1 },
+            fast: { interval: 5, label: 'Hızlı', speed: 2 },
+            colorcycle: { interval: 16, label: 'Renk Döngüsü', speed: 2 },
+            bw: { interval: 10, label: 'Siyah-Beyaz', speed: 1 }
+        };
+
+        const COLORS_CYCLE = [
+            [255, 0, 0],     // Kırmızı
+            [0, 255, 0],     // Yeşil
+            [0, 0, 255],     // Mavi
+            [255, 255, 255], // Beyaz
+            [0, 0, 0],       // Siyah
+            [255, 255, 0],   // Sarı
+            [0, 255, 255],   // Camgöbeği
+            [255, 0, 255],   // Magenta
+        ];
+
+        // ═══════════════════════════════════════════════════════
+        // DRAW FUNCTIONS
+        // ═══════════════════════════════════════════════════════
+
+        function drawClassic(canvas) {
+            const ctx = canvas.getContext('2d');
+            const blockSize = 64;
+            const imageData = ctx.createImageData(blockSize, blockSize);
+
+            for (let i = 0; i < blockSize * blockSize; i++) {
+                const p = i * 4;
+                imageData.data[p] = Math.random() >= 0.5 ? 255 : 0;
+                imageData.data[p + 1] = Math.random() >= 0.5 ? 255 : 0;
+                imageData.data[p + 2] = Math.random() >= 0.5 ? 255 : 0;
+                imageData.data[p + 3] = 255;
+            }
+
+            for (let y = 0; y < canvas.height; y += blockSize) {
+                for (let x = 0; x < canvas.width; x += blockSize) {
+                    ctx.putImageData(imageData, x, y);
+                }
+            }
+        }
+
+        function drawFast(canvas) {
+            // Same as classic but called at higher frequency
+            drawClassic(canvas);
+        }
+
+        function drawColorCycle(canvas) {
+            const ctx = canvas.getContext('2d');
+            state.colorCycleFrame++;
+
+            if (state.colorCycleFrame % 6 === 0) {
+                state.colorCycleIndex = (state.colorCycleIndex + 1) % COLORS_CYCLE.length;
+            }
+
+            const color = COLORS_CYCLE[state.colorCycleIndex];
+            ctx.fillStyle = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add some random noise on top for better pixel stimulation
+            const blockSize = 32;
+            const imageData = ctx.createImageData(blockSize, blockSize);
+            for (let i = 0; i < blockSize * blockSize; i++) {
+                const p = i * 4;
+                if (Math.random() > 0.7) {
+                    imageData.data[p] = color[0];
+                    imageData.data[p + 1] = color[1];
+                    imageData.data[p + 2] = color[2];
+                    imageData.data[p + 3] = 255;
+                } else {
+                    imageData.data[p] = Math.random() >= 0.5 ? 255 : 0;
+                    imageData.data[p + 1] = Math.random() >= 0.5 ? 255 : 0;
+                    imageData.data[p + 2] = Math.random() >= 0.5 ? 255 : 0;
+                    imageData.data[p + 3] = 255;
+                }
+            }
+
+            for (let y = 0; y < canvas.height; y += blockSize) {
+                for (let x = 0; x < canvas.width; x += blockSize) {
+                    ctx.putImageData(imageData, x, y);
+                }
+            }
+        }
+
+        function drawBlackWhite(canvas) {
+            const ctx = canvas.getContext('2d');
+            const blockSize = 64;
+            const imageData = ctx.createImageData(blockSize, blockSize);
+
+            for (let i = 0; i < blockSize * blockSize; i++) {
+                const p = i * 4;
+                const val = Math.random() >= 0.5 ? 255 : 0;
+                imageData.data[p] = val;
+                imageData.data[p + 1] = val;
+                imageData.data[p + 2] = val;
+                imageData.data[p + 3] = 255;
+            }
+
+            for (let y = 0; y < canvas.height; y += blockSize) {
+                for (let x = 0; x < canvas.width; x += blockSize) {
+                    ctx.putImageData(imageData, x, y);
+                }
+            }
+        }
+
+        function getDrawFunction() {
+            switch (state.mode) {
+                case 'fast': return drawFast;
+                case 'colorcycle': return drawColorCycle;
+                case 'bw': return drawBlackWhite;
+                default: return drawClassic;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // CANVAS FRAME MANAGEMENT
+        // ═══════════════════════════════════════════════════════
+
+        function createCanvasFrame(index) {
+            const frame = document.createElement('div');
+            frame.className = 'canvas-frame';
+            frame.style.width = state.size + 'px';
+            frame.style.height = state.size + 'px';
+            frame.style.animationDelay = (index * 80) + 'ms';
+
+            // Position: spread across the screen
+            const screenW = window.innerWidth;
+            const screenH = window.innerHeight;
+            const cols = Math.ceil(Math.sqrt(state.count));
+            const row = Math.floor(index / cols);
+            const col = index % cols;
+            const spacingX = screenW / (cols + 1);
+            const spacingY = screenH / (Math.ceil(state.count / cols) + 1);
+
+            frame.style.left = (spacingX * (col + 1) - state.size / 2) + 'px';
+            frame.style.top = (spacingY * (row + 1) - state.size / 2) + 'px';
+
+            const canvas = document.createElement('canvas');
+            canvas.width = state.size;
+            canvas.height = state.size;
+            frame.appendChild(canvas);
+
+            // ─── Drag Logic ───
+            let isDragging = false;
+            let dragOffsetX = 0;
+            let dragOffsetY = 0;
+
+            frame.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                const rect = frame.getBoundingClientRect();
+                dragOffsetX = e.clientX - rect.left;
+                dragOffsetY = e.clientY - rect.top;
+                frame.style.zIndex = 100;
+                frame.setPointerCapture(e.pointerId);
+                hideDragTip();
+            });
+
+            frame.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const x = e.clientX - dragOffsetX;
+                const y = e.clientY - dragOffsetY;
+                frame.style.left = x + 'px';
+                frame.style.top = y + 'px';
+            });
+
+            frame.addEventListener('pointerup', () => {
+                isDragging = false;
+                frame.style.zIndex = '';
+            });
+
+            frame.addEventListener('lostpointercapture', () => {
+                isDragging = false;
+                frame.style.zIndex = '';
+            });
+
+            document.getElementById('fixScreen').appendChild(frame);
+            return { frame, canvas };
+        }
+
+        function startDrawing() {
+            // Clear existing intervals
+            state.intervals.forEach(id => clearInterval(id));
+            state.intervals = [];
+
+            const drawFn = getDrawFunction();
+            const interval = MODES[state.mode].interval;
+
+            state.canvasFrames.forEach(({ canvas }) => {
+                const id = setInterval(() => drawFn(canvas), interval);
+                state.intervals.push(id);
+            });
+        }
+
+        function rebuildCanvasFrames() {
+            // Clear existing
+            state.intervals.forEach(id => clearInterval(id));
+            state.intervals = [];
+
+            const fixScreen = document.getElementById('fixScreen');
+            // Remove old frames
+            state.canvasFrames.forEach(({ frame }) => {
+                frame.classList.add('removing');
+            });
+
+            setTimeout(() => {
+                state.canvasFrames.forEach(({ frame }) => {
+                    if (frame.parentNode) frame.parentNode.removeChild(frame);
+                });
+                state.canvasFrames = [];
+
+                // Create new frames
+                for (let i = 0; i < state.count; i++) {
+                    state.canvasFrames.push(createCanvasFrame(i));
+                }
+
+                startDrawing();
+            }, state.canvasFrames.length > 0 ? 300 : 0);
+        }
+
+        function updateSize(newSize) {
+            state.size = newSize;
+            state.canvasFrames.forEach(({ frame, canvas }) => {
+                frame.style.width = newSize + 'px';
+                frame.style.height = newSize + 'px';
+                canvas.width = newSize;
+                canvas.height = newSize;
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // TIMER
+        // ═══════════════════════════════════════════════════════
+
+        function getElapsedSeconds() {
+            if (state.paused) return state.elapsedBeforePause;
+            return state.elapsedBeforePause + Math.floor((Date.now() - state.startTime) / 1000);
+        }
+
+        function updateTimer() {
+            const elapsed = getElapsedSeconds();
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').textContent = `${minutes}:${seconds}`;
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // PAUSE / RESUME
+        // ═══════════════════════════════════════════════════════
+
+        function togglePause() {
+            const pauseBtn = document.getElementById('pauseBtn');
+            const pauseIcon = document.getElementById('pauseIcon');
+            const playIcon = document.getElementById('playIcon');
+            const pauseBtnText = document.getElementById('pauseBtnText');
+            const timerEl = document.getElementById('timerDisplay');
+
+            if (!state.paused) {
+                // PAUSE
+                state.paused = true;
+                state.elapsedBeforePause = getElapsedSeconds();
+                state.intervals.forEach(id => clearInterval(id));
+                state.intervals = [];
+                clearInterval(state.timerInterval);
+
+                pauseBtn.classList.add('paused');
+                pauseIcon.style.display = 'none';
+                playIcon.style.display = '';
+                pauseBtnText.textContent = 'Devam Et';
+                timerEl.classList.add('paused');
+            } else {
+                // RESUME
+                state.paused = false;
+                state.startTime = Date.now();
+                startDrawing();
+                state.timerInterval = setInterval(updateTimer, 1000);
+
+                pauseBtn.classList.remove('paused');
+                pauseIcon.style.display = '';
+                playIcon.style.display = 'none';
+                pauseBtnText.textContent = 'Duraklat';
+                timerEl.classList.remove('paused');
+            }
+            saveState();
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // LOCALSTORAGE PERSISTENCE
+        // ═══════════════════════════════════════════════════════
+
+        function saveState() {
+            const data = {
+                count: state.count,
+                size: state.size,
+                mode: state.mode,
+                elapsedSeconds: getElapsedSeconds(),
+                savedAt: Date.now()
+            };
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                if (data.count) state.count = Math.min(6, Math.max(1, data.count));
+                if (data.size) state.size = Math.min(512, Math.max(128, data.size));
+                if (data.mode && MODES[data.mode]) state.mode = data.mode;
+                if (data.elapsedSeconds) state.elapsedBeforePause = data.elapsedSeconds;
+                return true;
+            } catch (e) { return false; }
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // FULLSCREEN
+        // ═══════════════════════════════════════════════════════
+
+        let isFullscreen = false;
+
+        function toggleFullscreen() {
+            const el = document.documentElement;
+
+            if (!isFullscreen) {
+                if (el.requestFullscreen) el.requestFullscreen();
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+                isFullscreen = true;
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                isFullscreen = false;
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            isFullscreen = !!document.fullscreenElement;
+        });
+
+        // ═══════════════════════════════════════════════════════
+        // DRAG TIP
+        // ═══════════════════════════════════════════════════════
+
+        function hideDragTip() {
+            document.getElementById('dragTip').classList.add('hide');
+        }
+
+        // Auto-hide after 8 seconds
+        setTimeout(hideDragTip, 8000);
+
+        // ═══════════════════════════════════════════════════════
+        // EVENT LISTENERS
+        // ═══════════════════════════════════════════════════════
+
+        // Kare sayısı
+        document.getElementById('increaseCount').addEventListener('click', () => {
+            if (state.count >= 6) return;
+            state.count++;
+            document.getElementById('countDisplay').textContent = state.count;
+            rebuildCanvasFrames();
+            saveState();
+        });
+
+        document.getElementById('decreaseCount').addEventListener('click', () => {
+            if (state.count <= 1) return;
+            state.count--;
+            document.getElementById('countDisplay').textContent = state.count;
+            rebuildCanvasFrames();
+            saveState();
+        });
+
+        // Boyut slider
+        const sizeSlider = document.getElementById('sizeSlider');
+        const sizeValueEl = document.getElementById('sizeValue');
+
+        sizeSlider.addEventListener('input', () => {
+            const val = parseInt(sizeSlider.value);
+            sizeValueEl.textContent = val + 'px';
+            updateSize(val);
+            saveState();
+        });
+
+        // Mod seçimi
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelector('.mode-btn.active').classList.remove('active');
+                btn.classList.add('active');
+                state.mode = btn.dataset.mode;
+                state.colorCycleIndex = 0;
+                state.colorCycleFrame = 0;
+                startDrawing();
+                saveState();
+            });
+        });
+
+        // Tam ekran
+        document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
+
+        // Panel gizle/göster
+        const panel = document.getElementById('controlPanel');
+        const toggleBtn = document.getElementById('togglePanelBtn');
+        const hidePanelBtn = document.getElementById('hidePanelBtn');
+
+        hidePanelBtn.addEventListener('click', () => {
+            state.panelVisible = !state.panelVisible;
+            panel.classList.toggle('hidden', !state.panelVisible);
+            toggleBtn.style.display = state.panelVisible ? 'none' : 'flex';
+            hidePanelBtn.innerHTML = state.panelVisible ?
+                `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Panel Gizle` :
+                `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Panel Göster`;
+        });
+
+        toggleBtn.addEventListener('click', () => {
+            state.panelVisible = true;
+            panel.classList.remove('hidden');
+            toggleBtn.style.display = 'none';
+            hidePanelBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Panel Gizle`;
+        });
+
+        // ESC to exit fullscreen (handled natively) & keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+            if (e.key === 'h' || e.key === 'H') hidePanelBtn.click();
+            if (e.key === ' ') { e.preventDefault(); togglePause(); }
+            if (e.key === '+' || e.key === '=') document.getElementById('increaseCount').click();
+            if (e.key === '-') document.getElementById('decreaseCount').click();
+            if (e.key === '1') selectMode('classic');
+            if (e.key === '2') selectMode('fast');
+            if (e.key === '3') selectMode('colorcycle');
+            if (e.key === '4') selectMode('bw');
+        });
+
+        function selectMode(mode) {
+            const btn = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+            if (btn) btn.click();
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════════
+
+        function init() {
+            const restored = loadState();
+
+            // Apply restored state to UI
+            document.getElementById('countDisplay').textContent = state.count;
+            document.getElementById('sizeSlider').value = state.size;
+            document.getElementById('sizeValue').textContent = state.size + 'px';
+
+            // Set active mode button
+            const activeBtn = document.querySelector('.mode-btn.active');
+            if (activeBtn) activeBtn.classList.remove('active');
+            const modeBtn = document.querySelector(`.mode-btn[data-mode="${state.mode}"]`);
+            if (modeBtn) modeBtn.classList.add('active');
+
+            state.startTime = Date.now();
+            rebuildCanvasFrames();
+            state.timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+
+            // Periodically save state (every 30s)
+            setInterval(saveState, 30000);
+
+            // Save on page unload
+            window.addEventListener('beforeunload', saveState);
+        }
+
+        init();
+    </script>
+
+</body>
+
+</html>
