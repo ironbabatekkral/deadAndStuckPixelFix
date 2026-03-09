@@ -80,6 +80,22 @@
             background: transparent !important;
         }
 
+        /* ─── Eye Protection (Amber) Modu ─── */
+        body.amber-mode #fixScreen::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 140, 0, 0.15);
+            /* Hafif kehribar tonu */
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        body.amber-mode {
+            background: #1a1005;
+            /* Arka planı koyu bir kahve/sarıya çeker */
+        }
+
         .panel-title {
             font-size: 13px;
             font-weight: 700;
@@ -722,6 +738,15 @@
             </svg>
             Panel Gizle
         </button>
+        <button class="bar-btn" id="amberBtn" title="Göz Koruması / Amber Modu (A)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <path d="M12 8v4"></path>
+                <path d="M12 16h.01"></path>
+            </svg>
+            Göz Koruması
+        </button>
     </div>
 
     <!-- ═══════ DRAG TIP ═══════ -->
@@ -739,12 +764,13 @@
 
         const state = {
             canvasFrames: [],
-            intervals: [],
+            animationFrames: [], // For requestAnimationFrame IDs
             count: 1,
             size: 256,
             mode: 'classic',
-            timerMode: 0, // 0 means continuous, otherwise minutes
+            timerMode: 0,
             bgTransparent: false,
+            amberMode: false,
             uiHidden: false,
             epilepsyAccepted: false,
             startTime: Date.now(),
@@ -854,26 +880,46 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Noise (Karıncalanma) Modu - Siyah beyaz per piksel karıncalanma
-        function drawNoise(canvas) {
-            const ctx = canvas.getContext('2d');
-            // Performans için noise bloklarını biraz büyük tutuyoruz (2px veya 4px)
-            const blockSize = 4;
-            const imageData = ctx.createImageData(blockSize, blockSize);
+        // Noise (Karıncalanma) Modu - Offscreen Caching (CPU Optimizasyonu)
+        const cachedNoiseFrames = [];
+        let isNoiseCached = false;
 
-            for (let y = 0; y < canvas.height; y += blockSize) {
-                for (let x = 0; x < canvas.width; x += blockSize) {
-                    const val = Math.random() >= 0.5 ? 255 : 0;
-                    for (let i = 0; i < blockSize * blockSize; i++) {
-                        const p = i * 4;
-                        imageData.data[p] = val;
-                        imageData.data[p + 1] = val;
-                        imageData.data[p + 2] = val;
-                        imageData.data[p + 3] = 255;
+        function preCacheNoise() {
+            if (isNoiseCached) return;
+            // Generate 10 different noise frames to cycle through
+            for (let f = 0; f < 10; f++) {
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = 512; // Max size
+                offCanvas.height = 512;
+                const ctx = offCanvas.getContext('2d');
+
+                const blockSize = 8; // Larger blocks = less CPU, clearer noise
+                const imageData = ctx.createImageData(blockSize, blockSize);
+
+                for (let y = 0; y < offCanvas.height; y += blockSize) {
+                    for (let x = 0; x < offCanvas.width; x += blockSize) {
+                        const val = Math.random() >= 0.5 ? 255 : 0;
+                        for (let i = 0; i < blockSize * blockSize; i++) {
+                            const p = i * 4;
+                            imageData.data[p] = val;     // R
+                            imageData.data[p + 1] = val; // G
+                            imageData.data[p + 2] = val; // B
+                            imageData.data[p + 3] = 255; // A
+                        }
+                        ctx.putImageData(imageData, x, y);
                     }
-                    ctx.putImageData(imageData, x, y);
                 }
+                cachedNoiseFrames.push(offCanvas);
             }
+            isNoiseCached = true;
+        }
+
+        function drawNoise(canvas) {
+            if (!isNoiseCached) preCacheNoise();
+            const ctx = canvas.getContext('2d');
+            // Rastgele bir cache seç ve direkt ekrana bas (CPU'suz blitting)
+            const randomCache = cachedNoiseFrames[Math.floor(Math.random() * cachedNoiseFrames.length)];
+            ctx.drawImage(randomCache, 0, 0, canvas.width, canvas.height);
         }
 
         // Zıt Renkler (Complementary Colors) Modu
@@ -1004,15 +1050,13 @@
         }
 
         function startDrawing() {
-            // Clear existing intervals
-            state.intervals.forEach(id => clearInterval(id));
-            state.intervals = [];
+            // Animasyonları iptal et
+            state.animationFrames.forEach(id => cancelAnimationFrame(id));
+            state.animationFrames = [];
 
             if (state.paused) return;
 
             const drawFn = getDrawFunction();
-            // Sabit 16ms interval (~60fps) en agresif uyarı için.
-            let interval = 16;
 
             // Eğer test modu ise, interval gereksiz. İlk çizimi yapıp bırak.
             if (state.mode === 'test') {
@@ -1022,21 +1066,32 @@
                 return;
             }
 
-            // Hızlı modu eskisi gibi daha agresif tutabiliriz: 10ms (~100fps maksimum)
-            if (state.mode === 'fast') {
-                interval = 10;
-            }
+            // Fast modu için, her requestAnimationFrame frame'inde 2 kez renk çizebiliriz 
+            // Veya sadece standart donanım senkronu (rAF) bırakabiliriz çünkü rAF zaten GPU ile senkrondur
+            let drawLoop = (canvas) => {
+                if (state.mode === 'fast') {
+                    drawFn(canvas); // Double flush logic for ultra fast
+                    drawFn(canvas);
+                } else {
+                    drawFn(canvas);
+                }
+
+                if (!state.paused) {
+                    const id = requestAnimationFrame(() => drawLoop(canvas));
+                    state.animationFrames.push(id);
+                }
+            };
 
             state.canvasFrames.forEach(({ canvas }) => {
-                const id = setInterval(() => drawFn(canvas), interval);
-                state.intervals.push(id);
+                const id = requestAnimationFrame(() => drawLoop(canvas));
+                state.animationFrames.push(id);
             });
         }
 
         function rebuildCanvasFrames() {
-            // Clear existing
-            state.intervals.forEach(id => clearInterval(id));
-            state.intervals = [];
+            // Animasyonları iptal et
+            state.animationFrames.forEach(id => cancelAnimationFrame(id));
+            state.animationFrames = [];
 
             const fixScreen = document.getElementById('fixScreen');
             // Remove old frames
@@ -1111,8 +1166,8 @@
                 // PAUSE
                 state.paused = true;
                 state.elapsedBeforePause = getElapsedSeconds();
-                state.intervals.forEach(id => clearInterval(id));
-                state.intervals = [];
+                state.animationFrames.forEach(id => cancelAnimationFrame(id));
+                state.animationFrames = [];
                 clearInterval(state.timerInterval);
 
                 pauseBtn.classList.add('paused');
@@ -1319,6 +1374,23 @@
             }
         }
 
+        // Göz Koruması / Amber Modu (A Tuşu)
+        function toggleAmber() {
+            state.amberMode = !state.amberMode;
+            if (state.amberMode) {
+                document.body.classList.add('amber-mode');
+                // Transparent açıksa amber çalışmaz, bu yüzden uyar/kapat
+                if (state.bgTransparent) {
+                    toggleBackground(); // kapat
+                }
+            } else {
+                document.body.classList.remove('amber-mode');
+            }
+            saveState();
+        }
+
+        document.getElementById('amberBtn').addEventListener('click', toggleAmber);
+
         // ESC to exit fullscreen (handled natively) & keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             // Sadece input veya select elementlerinde değilken çalışsın
@@ -1328,13 +1400,18 @@
             if (e.key === 'h' || e.key === 'H') hidePanelBtn.click();
             if (e.key === 't' || e.key === 'T') toggleUI();
             if (e.key === 'b' || e.key === 'B') toggleBackground();
+            if (e.key === 'a' || e.key === 'A') toggleAmber();
             if (e.key === ' ') { e.preventDefault(); togglePause(); }
             if (e.key === '+' || e.key === '=') document.getElementById('increaseCount').click();
             if (e.key === '-') document.getElementById('decreaseCount').click();
-            if (e.key === '1') selectMode('classic');
-            if (e.key === '2') selectMode('fast');
-            if (e.key === '3') selectMode('colorcycle');
-            if (e.key === '4') selectMode('bw');
+            if (e.key === '1') selectMode('auto');
+            if (e.key === '2') selectMode('classic');
+            if (e.key === '3') selectMode('fast');
+            if (e.key === '4') selectMode('colorcycle');
+            if (e.key === '5') selectMode('bw');
+            if (e.key === '6') selectMode('noise');
+            if (e.key === '7') selectMode('opposite');
+            if (e.key === '8') selectMode('test');
         });
 
         function selectMode(mode) {
@@ -1361,6 +1438,9 @@
 
             if (state.bgTransparent) {
                 document.body.classList.add('bg-transparent');
+            }
+            if (state.amberMode) {
+                document.body.classList.add('amber-mode');
             }
 
             if (state.epilepsyAccepted) {
