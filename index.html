@@ -635,6 +635,48 @@
             transform: translateX(-50%) scale(1.05);
         }
 
+        /* Targeter Overlay (Crosshair) */
+        #targetOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 9998;
+            cursor: crosshair;
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 100px;
+        }
+
+        .target-instructions {
+            background: rgba(255, 60, 60, 0.9);
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid #ff3c3c;
+            animation: fadeInDown 0.4s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         @keyframes pulse-red {
             0% {
                 box-shadow: 0 0 0 0 rgba(255, 60, 60, 0.7);
@@ -803,9 +845,15 @@
     </div>
 
     <!-- ═══════ DIAGNOSTIC UI (PHASE 5) ═══════ -->
-    <button id="diagnosticBtn" title="Bu renkte karanlık/parlayan bir nokta görüyorum">
-        <span>⚠️ Bu Renkte Hata Görüyorum</span>
+    <button id="diagnosticBtn" title="Test ekranında bir hata tespit ettim">
+        <span>⚠️ Burada Hatalı Bir Piksel Var</span>
     </button>
+
+    <div id="targetOverlay">
+        <div class="target-instructions">Nişangah (Crosshair) Modu<br><span
+                style="font-size: 14px; font-weight: normal;">Lütfen ekrandaki sorunlu (parlak/karanlık) noktanın tam
+                üzerine tıklayın.</span></div>
+    </div>
 
     <div id="diagnosticModal">
         <div class="diagnosis-box">
@@ -1669,10 +1717,11 @@
         });
 
         // ═══════════════════════════════════════════════════════
-        // DIAGNOSTIC ENGINE (Phase 5)
+        // DIAGNOSTIC ENGINE & TARGETER (Phase 5)
         // ═══════════════════════════════════════════════════════
 
         const diagBtn = document.getElementById('diagnosticBtn');
+        const targetOverlay = document.getElementById('targetOverlay');
         const diagModal = document.getElementById('diagnosticModal');
         const diagContent = document.getElementById('diagnosisContent');
         const applyDiagBtn = document.getElementById('applyDiagnosisBtn');
@@ -1680,10 +1729,27 @@
         const blackScreenOpts = document.getElementById('blackScreenOptions');
 
         let recommendedColor = 'white';
+        let targetX = -1;
+        let targetY = -1;
 
         diagBtn.addEventListener('click', () => {
+            // Activate Targeter Crosshair Mode
+            diagBtn.style.display = 'none'; // Hide the button itself
+            targetOverlay.style.display = 'flex';
+        });
+
+        targetOverlay.addEventListener('click', (e) => {
+            // Nişangah tıklaması gerçekleşti
+            targetX = e.clientX;
+            targetY = e.clientY;
+
+            targetOverlay.style.display = 'none';
             if (!state.paused) togglePause(); // Testi duraklat
 
+            showDiagnosticModal();
+        });
+
+        function showDiagnosticModal() {
             const currentColorHex = TEST_COLORS[state.testModeIndex % TEST_COLORS.length];
             const colorName = TEST_COLOR_NAMES[currentColorHex];
 
@@ -1692,7 +1758,6 @@
 
             // Teşhis Matrisi
             if (currentColorHex === '#000000') {
-                // Siyah Testi
                 diagnosticReport = `
                     <strong>Test Ekranı:</strong> ${colorName}<br>
                     <strong>Görülen Hata:</strong> Parlayan (Renkli) Nokta<br><br>
@@ -1700,20 +1765,18 @@
                     <strong>Tavsiye:</strong> Lütfen aşağıdaki seçenekten parlayan rengi seçin. Etrafındaki komşu piksellere tam yük (255) verilirken arızalı piksele "Zıt Renk Şoku" uygulayarak hücresel bazda resetlenmeye zorlanacaktır.
                 `;
                 blackScreenOpts.style.display = 'block';
-                recommendedColor = 'from_radio'; // Radio button'dan okunacak
+                recommendedColor = 'from_radio';
 
             } else if (currentColorHex === '#FFFFFF') {
-                // Beyaz Testi
                 diagnosticReport = `
                     <strong>Test Ekranı:</strong> ${colorName}<br>
                     <strong>Görülen Hata:</strong> Karanlık Nokta (Siyah)<br><br>
                     <strong>Teşhis:</strong> <u>Dead Cell (Tam Güç Kaybı).</u> Hücre tüm alt-pikselleriyle tamamen kapalı veya ağır bir uyku (dormant) halinde.<br><br>
                     <strong>Tavsiye:</strong> Cihazınıza şoklama uygularken, o bölgeye <em>parmağınızla/kalem silgisiyle çok hafif masaj (bastırma)</em> yapmanız önerilir. Zıt renk şokları tek piksellerde işe yarar, tam hücre ölümlerinde "Termal Uyarı" (Tam Beyaz/Siyah geçişleri) daha uygundur.
                 `;
-                recommendedColor = 'black'; // Black seçilince termal beyaz flash veriyoruz Expert modda
+                recommendedColor = 'black';
 
             } else {
-                // R, G, B testleri
                 diagnosticReport = `
                     <strong>Test Ekranı:</strong> ${colorName}<br>
                     <strong>Görülen Hata:</strong> Siyah / Karanlık Nokta<br><br>
@@ -1726,12 +1789,22 @@
                 else if (currentColorHex === '#0000FF') recommendedColor = 'blue';
             }
 
+            // X-Y Işınlanma Bilgisi
+            diagnosticReport += `
+                <div style="margin-top:15px; padding: 10px; background: rgba(0,255,136,0.1); border-left: 3px solid #00ff88; color: #00ff88; font-size: 13px;">
+                🎯 <strong>Otomatik Işınlama:</strong> Tespit ettiğiniz (X:${targetX}, Y:${targetY}) noktasına, Onarıcı Kare sistem tarafından otomatik olarak ışınlanacaktır.
+                </div>
+            `;
+
             diagContent.innerHTML = diagnosticReport;
             diagModal.style.display = 'flex';
-        });
+        }
 
         closeDiagBtn.addEventListener('click', () => {
             diagModal.style.display = 'none';
+            if (state.mode === 'test') {
+                diagBtn.style.display = 'flex'; // Geri getir
+            }
             if (state.paused) togglePause();
         });
 
@@ -1756,6 +1829,14 @@
 
             updateExpertUI();
             checkerboardCanvas = null; // Cache flush
+
+            // AUTO POSITIONING LOGIC
+            // İlk çerçeveyi (frame[0]) hedeflenen noktaya ışınla
+            if (state.canvasFrames.length > 0 && targetX !== -1 && targetY !== -1) {
+                const mainFrame = state.canvasFrames[0].frame;
+                mainFrame.style.left = (targetX - state.size / 2) + 'px';
+                mainFrame.style.top = (targetY - state.size / 2) + 'px';
+            }
 
             if (state.paused) togglePause();
             else startDrawing();

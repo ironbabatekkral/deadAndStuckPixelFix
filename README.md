@@ -24,6 +24,7 @@
 | 📺 **Karıncalanma** | Eski TV'lerdeki gibi statik siyah-beyaz noise |
 | 🔄 **Zıt Renkler** | Kırmızı/Cyan, Yeşil/Magenta, Sarı/Mavi geçişi |
 | 🔍 **Piksel Testi** | Yanıp sönme olmadan sabit renklerde ölü piksel arama |
+| 🩺 **Teşhis Motoru** | Test modunda hatalı pikseli analiz edip özel tedavi öneren zeka |
 | ⏱️ **Zamanlayıcı (Auto-stop)** | 5, 10, 20 veya 60 dk sonra otomatik durdurma |
 | 🛡️ **Göz Koruması** | Şiddetli flaşlara karşı göz dinlendiren kehribar arka plan (Amber Modu) |
 | 🔲 **Şeffaf Arkaplan (Overlay)**| Sadece onarıcı kareyi bırakıp arkada çalışmaya devam edin |
@@ -77,5 +78,6 @@ Bu proje, basit bir renk değiştirme uygulamasından öte, **LCD ve OLED panell
 | **Voltage Scan** | Sine-Wave (Sinüs Dalgası) Inverse Dithering | Voltajı (parlaklığı) L0 ile L255 arasında yumuşak ama çok hızlı dalgalandırarak kristalin yapışkan (viskoz) direncini kırmak. |
 | **Spatial Voltage Pull** | Micro-Shift Checkerboard (Hareketli Dama Tahtası) | Sorunlu pikselin etrafındaki komşu hücreleri her frame'de 1 piksel x/y ekseninde kaydırarak sentetik, titreşimli bir manyetik alan yaratmak. |
 | **High-Freq Noise** | Offscreen Caching ile Yüksek Frekanslı Rastgelelik | Statik piksel yapısını kırmak için sürekli değişen voltaj yükü ile kristalin yeniden dizilime zorlanması. |
+| **Diagnostic Engine** | İnteraktif Test Modu ve Karar Ağacı | Kullanıcının test esnasında gördüğü hatayı analiz ederek (Dead vs Dormant) en uygun Uzman Tedavisine otomatik yönlendirme yapılması. |
 | **Luminance Masking** | Optik Güvenlik Katmanı (Amber Eye-Protection) | Terapinin uzun süreli kesintisiz uygulanabilmesi için göz sağlığını ve epilepsi riskini hafifleten UI tasarımı. |
 | **Thermal Pulse** | Panel Isıtma (Dolaylı) | Yüksek parlaklıklı beyaz stres sayesinde lokal fiziksel genleşme yaratılarak kristal hareketini (akışkanlığını) artırma ihtimali. |
