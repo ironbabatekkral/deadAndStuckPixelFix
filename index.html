@@ -607,6 +607,173 @@
         .canvas-frame.removing {
             animation: fadeOut 0.3s ease forwards;
         }
+
+        /* ═══════════════════════ DIAGNOSTIC UI (PHASE 5) ═══════════════════════ */
+        #diagnosticBtn {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 60, 60, 0.9);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 2px solid #ff3c3c;
+            box-shadow: 0 0 20px rgba(255, 60, 60, 0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: pulse-red 2s infinite;
+        }
+
+        #diagnosticBtn:hover {
+            background: #ff3c3c;
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 60, 60, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(255, 60, 60, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 60, 60, 0);
+            }
+        }
+
+        /* Diagnostic Modal */
+        #diagnosticModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            /* Premium Blur Effect */
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .diagnosis-box {
+            background: #111;
+            border: 1px solid #333;
+            border-top: 4px solid #00f0ff;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            color: #fff;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .diagnosis-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: #00f0ff;
+        }
+
+        .diagnosis-title {
+            color: #00f0ff;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .diagnosis-text {
+            font-size: 15px;
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: left;
+            background: rgba(0, 240, 255, 0.05);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #00f0ff;
+        }
+
+        .diagnosis-action {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .diagnosis-btn {
+            background: #00f0ff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .diagnosis-btn:hover {
+            background: #00c0cc;
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        }
+
+        .close-diagnosis-btn {
+            background: transparent;
+            color: #888;
+            border: 1px solid #444;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-diagnosis-btn:hover {
+            background: #222;
+            color: #fff;
+        }
+
+        .black-screen-question {
+            margin-top: 15px;
+            margin-bottom: 20px;
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .color-radios {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .color-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: #333;
+        }
+
+        .color-radio-label input {
+            accent-color: #00f0ff;
+        }
     </style>
 </head>
 
@@ -633,6 +800,39 @@
 
     <div id="fixScreen">
         <!-- Canvas frames will be dynamically added here -->
+    </div>
+
+    <!-- ═══════ DIAGNOSTIC UI (PHASE 5) ═══════ -->
+    <button id="diagnosticBtn" title="Bu renkte karanlık/parlayan bir nokta görüyorum">
+        <span>⚠️ Bu Renkte Hata Görüyorum</span>
+    </button>
+
+    <div id="diagnosticModal">
+        <div class="diagnosis-box">
+            <div class="diagnosis-icon">🔬</div>
+            <div class="diagnosis-title">Teşhis Raporu</div>
+
+            <div class="diagnosis-text" id="diagnosisContent">
+                <!-- Teşhis metni buraya dinamik gelecek -->
+            </div>
+
+            <div id="blackScreenOptions" class="black-screen-question" style="display:none;">
+                <strong style="color: #ffcc00;">Soru:</strong> Parlayan nokta hangi renkte yanıyor?
+                <div class="color-radios">
+                    <label class="color-radio-label"><input type="radio" name="stuckColorOpt" value="blue" checked>
+                        Mavi</label>
+                    <label class="color-radio-label"><input type="radio" name="stuckColorOpt" value="red">
+                        Kırmızı</label>
+                    <label class="color-radio-label"><input type="radio" name="stuckColorOpt" value="green">
+                        Yeşil</label>
+                </div>
+            </div>
+
+            <div class="diagnosis-action">
+                <button class="diagnosis-btn" id="applyDiagnosisBtn">👉 Tavsiye Edilen Tedaviyi Başlat</button>
+                <button class="close-diagnosis-btn" id="closeDiagnosisBtn">Kapat ve Teste Devam Et</button>
+            </div>
+        </div>
     </div>
 
     <!-- ═══════ CONTROL PANEL ═══════ -->
@@ -965,6 +1165,14 @@
 
         // Sabit Renkler (Test Modu)
         const TEST_COLORS = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF', '#000000'];
+        const TEST_COLOR_NAMES = {
+            '#FF0000': 'Kırmızı (Red)',
+            '#00FF00': 'Yeşil (Green)',
+            '#0000FF': 'Mavi (Blue)',
+            '#FFFFFF': 'Beyaz (White)',
+            '#000000': 'Siyah (Black)'
+        };
+
         function drawTest(canvas) {
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = TEST_COLORS[state.testModeIndex % TEST_COLORS.length];
@@ -1169,6 +1377,14 @@
             state.animationFrames = [];
 
             if (state.paused) return;
+
+            // UI Diagnostic Button Logic
+            const diagBtn = document.getElementById('diagnosticBtn');
+            if (state.mode === 'test') {
+                diagBtn.style.display = 'flex';
+            } else {
+                diagBtn.style.display = 'none';
+            }
 
             const drawFn = getDrawFunction();
 
@@ -1451,6 +1667,102 @@
             checkerboardCanvas = null;
             saveState();
         });
+
+        // ═══════════════════════════════════════════════════════
+        // DIAGNOSTIC ENGINE (Phase 5)
+        // ═══════════════════════════════════════════════════════
+
+        const diagBtn = document.getElementById('diagnosticBtn');
+        const diagModal = document.getElementById('diagnosticModal');
+        const diagContent = document.getElementById('diagnosisContent');
+        const applyDiagBtn = document.getElementById('applyDiagnosisBtn');
+        const closeDiagBtn = document.getElementById('closeDiagnosisBtn');
+        const blackScreenOpts = document.getElementById('blackScreenOptions');
+
+        let recommendedColor = 'white';
+
+        diagBtn.addEventListener('click', () => {
+            if (!state.paused) togglePause(); // Testi duraklat
+
+            const currentColorHex = TEST_COLORS[state.testModeIndex % TEST_COLORS.length];
+            const colorName = TEST_COLOR_NAMES[currentColorHex];
+
+            blackScreenOpts.style.display = 'none';
+            let diagnosticReport = '';
+
+            // Teşhis Matrisi
+            if (currentColorHex === '#000000') {
+                // Siyah Testi
+                diagnosticReport = `
+                    <strong>Test Ekranı:</strong> ${colorName}<br>
+                    <strong>Görülen Hata:</strong> Parlayan (Renkli) Nokta<br><br>
+                    <strong>Teşhis:</strong> <u>Stuck Pixel (Enerji Yığılması).</u> Gördüğünüz renkli alt-pikselin transistörü 'AÇIK' (OFF komutu almıyor) konumunda takılı kalmış durumda.<br><br>
+                    <strong>Tavsiye:</strong> Lütfen aşağıdaki seçenekten parlayan rengi seçin. Etrafındaki komşu piksellere tam yük (255) verilirken arızalı piksele "Zıt Renk Şoku" uygulayarak hücresel bazda resetlenmeye zorlanacaktır.
+                `;
+                blackScreenOpts.style.display = 'block';
+                recommendedColor = 'from_radio'; // Radio button'dan okunacak
+
+            } else if (currentColorHex === '#FFFFFF') {
+                // Beyaz Testi
+                diagnosticReport = `
+                    <strong>Test Ekranı:</strong> ${colorName}<br>
+                    <strong>Görülen Hata:</strong> Karanlık Nokta (Siyah)<br><br>
+                    <strong>Teşhis:</strong> <u>Dead Cell (Tam Güç Kaybı).</u> Hücre tüm alt-pikselleriyle tamamen kapalı veya ağır bir uyku (dormant) halinde.<br><br>
+                    <strong>Tavsiye:</strong> Cihazınıza şoklama uygularken, o bölgeye <em>parmağınızla/kalem silgisiyle çok hafif masaj (bastırma)</em> yapmanız önerilir. Zıt renk şokları tek piksellerde işe yarar, tam hücre ölümlerinde "Termal Uyarı" (Tam Beyaz/Siyah geçişleri) daha uygundur.
+                `;
+                recommendedColor = 'black'; // Black seçilince termal beyaz flash veriyoruz Expert modda
+
+            } else {
+                // R, G, B testleri
+                diagnosticReport = `
+                    <strong>Test Ekranı:</strong> ${colorName}<br>
+                    <strong>Görülen Hata:</strong> Siyah / Karanlık Nokta<br><br>
+                    <strong>Teşhis:</strong> <u>Dormant Sub-Pixel (Ağır Uyku).</u> ${colorName.split(' ')[0]} alt-pikseli ölü olabilir, ancak şanslıysanız sadece ağır bir uyku halindedir veya içindeki likit kristalin viskozitesi düğümlenmiştir.<br><br>
+                    <strong>Tavsiye:</strong> Umudunuzu kaybetmeyin. İlgili renk donanımına "Sine-Wave Voltage Scan" (Yumuşak Parlaklık Dalgalanması) ve "Micro-Shift Alan Çekimi" algoritmamızı uygulayarak viskoziteyi kırmayı ve uyuyan transistörü dürtmeyi tavsiye ediyoruz.
+                `;
+
+                if (currentColorHex === '#FF0000') recommendedColor = 'red';
+                else if (currentColorHex === '#00FF00') recommendedColor = 'green';
+                else if (currentColorHex === '#0000FF') recommendedColor = 'blue';
+            }
+
+            diagContent.innerHTML = diagnosticReport;
+            diagModal.style.display = 'flex';
+        });
+
+        closeDiagBtn.addEventListener('click', () => {
+            diagModal.style.display = 'none';
+            if (state.paused) togglePause();
+        });
+
+        applyDiagBtn.addEventListener('click', () => {
+            diagModal.style.display = 'none';
+
+            // Auto Select Expert Mode
+            document.querySelector('.mode-btn.active').classList.remove('active');
+            document.querySelector('.mode-btn[data-mode="expert"]').classList.add('active');
+            state.mode = 'expert';
+
+            // Set Color
+            let applyColor = recommendedColor;
+            if (recommendedColor === 'from_radio') {
+                const checkedRadio = document.querySelector('input[name="stuckColorOpt"]:checked');
+                if (checkedRadio) applyColor = checkedRadio.value;
+                else applyColor = 'blue';
+            }
+
+            const colorSelect = document.getElementById('stuckColorSelect');
+            if (colorSelect) colorSelect.value = applyColor;
+
+            updateExpertUI();
+            checkerboardCanvas = null; // Cache flush
+
+            if (state.paused) togglePause();
+            else startDrawing();
+
+            saveState();
+        });
+
 
         // Mod seçimi
         document.querySelectorAll('.mode-btn').forEach(btn => {
