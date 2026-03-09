@@ -918,12 +918,13 @@
             <div class="mode-grid">
                 <button class="mode-btn" data-mode="expert">🎯 Uzman (Hedefli)</button>
                 <button class="mode-btn" data-mode="auto">🚀 Tam Otomatik</button>
-                <button class="mode-btn active" data-mode="classic">⚡ Klasik</button>
-                <button class="mode-btn" data-mode="fast">🚀 Hızlı</button>
-                <button class="mode-btn" data-mode="colorcycle">🌈 Renk Döngüsü</button>
-                <button class="mode-btn" data-mode="bw">◐ Siyah-Beyaz</button>
-                <button class="mode-btn" data-mode="noise">📺 Karıncalanma</button>
-                <button class="mode-btn" data-mode="opposite">🔄 Zıt Renkler</button>
+                <button class="mode-btn" data-mode="classic">RGB Döngüsü (Klasik)</button>
+                <button class="mode-btn" data-mode="fast">Hızlı Flaş (Agresif)</button>
+                <button class="mode-btn" data-mode="colorcycle">Tam Spektrum (Yumuşak)</button>
+                <button class="mode-btn" data-mode="bw">Siyah / Beyaz Şoku</button>
+                <button class="mode-btn" data-mode="noise">Karıncalanma (Statik)</button>
+                <button class="mode-btn" data-mode="opposite">Zıt Renk Şoku</button>
+                <button class="mode-btn" data-mode="drift">Gezici (Drift)</button>
                 <button class="mode-btn" data-mode="test">🔍 Piksel Testi</button>
             </div>
         </div>
@@ -1267,50 +1268,48 @@
 
             state.expertModeFrame++;
 
-            // Phase 6 Hyper-Shock Engine: 3 Aşama fakat çok daha agresif
+            // Phase 6 Hyper-Shock Engine: 600 frame'lik döngü (~10 saniye @60Hz, ~3 saniye @200Hz)
             if (state.expertModeFrame > 600) {
                 state.expertModeFrame = 0;
             }
 
-            if (state.expertModeFrame < 180) {
-                // State 0: Hyper-Strobing (Ekstrem Göz Kırpma)
-                // Önceden % 2 === 0 ile statik bir hızdı. Şimdi çok keskin flaşlar için (frame % 4 < 2) 
-                // Donanım 144Hz ise saniyede tam 36 kez tam güç patlama
-                const isShock = (state.expertModeFrame % 4) < 2;
+            if (state.expertModeFrame < 200) {
+                // AŞAMA 1: Hyper-Strobing (Voltaj Şoku)
+                // rAF hızıyla tam senkronize, saniyede Hz kadar yanıp sönme
+                const isShock = (state.expertModeFrame % 2) === 0;
                 ctx.fillStyle = isShock ? targetColor.hex : '#000000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            } else if (state.expertModeFrame < 360) {
-                // State 1: Spatial Earthquake (Mikro-Deprem)
-                if (state.expertModeFrame === 180) checkerboardCanvas = null;
+            } else if (state.expertModeFrame < 400) {
+                // AŞAMA 2: Spatial Earthquake (Mikro-Deprem)
+                // Kristali fiziksel olarak sarsmak için dama tahtasını kaotik titretir
+                if (state.expertModeFrame === 200) checkerboardCanvas = null;
                 const cb = getCheckerboard();
 
-                // Önceden stabil kayan dama tahtası şimdi kaotik bir şekilde X ve Y'de titriyor
-                const jitterX = (Math.random() * 10 - 5); // -5 ile +5 piksel arası anlık sıçrama
-                const jitterY = (Math.random() * 10 - 5);
+                // Rastgele -3px ile +3px arası titreme (Vibration)
+                const jitterX = (Math.random() * 6 - 3);
+                const jitterY = (Math.random() * 6 - 3);
 
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(cb, jitterX, jitterY);
 
             } else {
-                // State 2: Sine Wave Voltage Scan + Thermal White Noise Injection
-                const timeStr = Date.now() / 30; // Çok daha hızlı dalgalanma (Eskiden 80'di)
-                const sineVal = (Math.sin(timeStr) + 1) / 2; // 0.0 to 1.0
+                // AŞAMA 3: Sine Wave Voltage Scan (Kristal Akışkanlığı)
+                // Parlaklığı dalgalandırarak kristal düğümünü çözer
+                const timeStr = Date.now() / 40;
+                const sineVal = (Math.sin(timeStr) + 1) / 2;
 
-                // Zemin siyah
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Thermal Injection: Dalganın tam tepe noktalarında (%95+), anlık BEYAZ FLAŞ (Isı Şoku)
-                if (sineVal > 0.95 && Math.random() > 0.5) {
-                    ctx.fillStyle = '#FFFFFF'; // Tam 255 beyaz
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Termal Enjeksiyon: Dalganın tepesinde anlık BEYAZ FLAŞ (Direnç kırma)
+                if (sineVal > 0.97) {
+                    ctx.fillStyle = '#FFFFFF';
                 } else {
-                    // Normal voltaj taraması
                     ctx.fillStyle = `rgba(${targetColor.rgb}, ${sineVal})`;
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
         }
 
@@ -1341,6 +1340,7 @@
                 case 'bw': return drawBlackWhite;
                 case 'noise': return drawNoise;
                 case 'opposite': return drawOpposite;
+                case 'drift': return drawAuto; // Ekranda gezerken, içindeki renk motoru AI-Otomatik (agresif renkler) olacak
                 case 'test': return drawTest;
                 default: return drawClassic;
             }
@@ -1425,8 +1425,13 @@
                 }
             });
 
+            // Kinetik Gezinti (Drift) için Hız Vektörleri
+            // 2 ile 5 arası veya -5 ile -2 arası x/y hızları atanır
+            const vx = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
+            const vy = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
+
             document.getElementById('fixScreen').appendChild(frame);
-            return { frame, canvas };
+            return { frame, canvas, vx, vy, isDragging: false }; // objeye ekledik
         }
 
         function startDrawing() {
@@ -1461,7 +1466,9 @@
             });
 
             // Fast modu için, her requestAnimationFrame frame'inde 2 kez renk çizebiliriz 
-            let drawLoop = (canvas) => {
+            let drawLoop = (frameObj) => {
+                const { canvas, frame } = frameObj;
+
                 if (state.mode === 'fast') {
                     drawFn(canvas); // Double flush logic for ultra fast
                     drawFn(canvas);
@@ -1469,14 +1476,41 @@
                     drawFn(canvas);
                 }
 
+                // KINETIC DRIFT (Ekranda Gezinme) Mantığı
+                if (state.mode === 'drift' && !state.paused && !frameObj.isDragging) {
+                    const screenW = window.innerWidth;
+                    const screenH = window.innerHeight;
+
+                    // DOM'dan mevcut konumu al
+                    let left = parseFloat(frame.style.left) || 0;
+                    let top = parseFloat(frame.style.top) || 0;
+
+                    // Koordinatları vektör kadar artır
+                    left += frameObj.vx;
+                    top += frameObj.vy;
+
+                    // Sınır Çarpışması (Bounce)
+                    if (left <= 0 || left + state.size >= screenW) {
+                        frameObj.vx *= -1; // Yön tersine
+                        left = Math.max(0, Math.min(left, screenW - state.size));
+                    }
+                    if (top <= 0 || top + state.size >= screenH) {
+                        frameObj.vy *= -1; // Yön tersine
+                        top = Math.max(0, Math.min(top, screenH - state.size));
+                    }
+
+                    frame.style.left = left + 'px';
+                    frame.style.top = top + 'px';
+                }
+
                 if (!state.paused) {
-                    const id = requestAnimationFrame(() => drawLoop(canvas));
+                    const id = requestAnimationFrame(() => drawLoop(frameObj));
                     state.animationFrames.push(id);
                 }
             };
 
-            state.canvasFrames.forEach(({ canvas }) => {
-                const id = requestAnimationFrame(() => drawLoop(canvas));
+            state.canvasFrames.forEach((frameObj) => {
+                const id = requestAnimationFrame(() => drawLoop(frameObj));
                 state.animationFrames.push(id);
             });
         }
@@ -1834,34 +1868,31 @@
         applyDiagBtn.addEventListener('click', () => {
             diagModal.style.display = 'none';
 
-            // Auto Select Expert Mode
+            // Otomatik Uzman Modu Seçimi
             document.querySelector('.mode-btn.active').classList.remove('active');
             document.querySelector('.mode-btn[data-mode="expert"]').classList.add('active');
             state.mode = 'expert';
 
-            // Set Color
+            // Teşhisten gelen rengi ayarla
             let applyColor = recommendedColor;
             if (recommendedColor === 'from_radio') {
                 const checkedRadio = document.querySelector('input[name="stuckColorOpt"]:checked');
-                if (checkedRadio) applyColor = checkedRadio.value;
-                else applyColor = 'blue';
+                applyColor = checkedRadio ? checkedRadio.value : 'blue';
             }
+            document.getElementById('stuckColorSelect').value = applyColor;
 
-            const colorSelect = document.getElementById('stuckColorSelect');
-            if (colorSelect) colorSelect.value = applyColor;
-
-            updateExpertUI();
-            checkerboardCanvas = null; // Cache flush
-
-            // AUTO POSITIONING LOGIC
-            // İlk çerçeveyi (frame[0]) hedeflenen noktaya ışınla
+            // KAREYİ IŞINLA (Cerrahi Müdahale)
             if (state.canvasFrames.length > 0 && targetX !== -1 && targetY !== -1) {
                 const mainFrame = state.canvasFrames[0].frame;
+                // Koordinatı tam merkezleyecek şekilde ayarla
                 mainFrame.style.left = (targetX - state.size / 2) + 'px';
                 mainFrame.style.top = (targetY - state.size / 2) + 'px';
             }
 
-            if (state.paused) togglePause();
+            updateExpertUI();
+            checkerboardCanvas = null; // Cache temizle
+
+            if (state.paused) togglePause(); // Duraklatılmışsa başlat
             else startDrawing();
 
             saveState();
