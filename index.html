@@ -971,7 +971,11 @@
         <!-- Timer -->
         <div class="control-group">
             <div class="control-label">Çalışma Süresi</div>
-            <div class="timer-display" id="timerDisplay">00:00:00</div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: center;">
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <button class="count-btn" id="resetTimerBtn" title="Süreyi Sıfırla"
+                    style="font-size: 14px; padding: 0 15px; width: auto; background: #333; height: 35px;">Temizle</button>
+            </div>
             <div class="timer-label">SAAT : DAKİKA : SANİYE</div>
         </div>
     </div>
@@ -1607,6 +1611,16 @@
                 }
             }
         }
+
+        document.getElementById('resetTimerBtn').addEventListener('click', () => {
+            state.elapsedBeforePause = 0;
+            state.startTime = Date.now();
+            updateTimer();
+            if (state.paused) {
+                document.getElementById('pauseBtnText').textContent = 'Başlat';
+            }
+            saveState();
+        });
 
         // ═══════════════════════════════════════════════════════
         // PAUSE / RESUME
