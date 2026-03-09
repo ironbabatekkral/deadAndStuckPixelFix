@@ -889,7 +889,7 @@
 
         <!-- Kare Sayısı -->
         <div class="control-group">
-            <div class="control-label">Kare Sayısı</div>
+            <div class="control-label">Kare Sayısı (Onarıcı Bölge)</div>
             <div class="count-control">
                 <button class="count-btn" id="decreaseCount" title="Kare azalt">−</button>
                 <span class="count-display" id="countDisplay">1</span>
@@ -901,16 +901,25 @@
 
         <!-- Boyut -->
         <div class="control-group">
-            <div class="control-label">Boyut</div>
+            <div class="control-label">Boyut (Kare Büyüklüğü)</div>
             <div class="slider-wrapper">
-                <input type="range" id="sizeSlider" min="64" max="512" value="256" step="16">
-                <span class="slider-value" id="sizeValue">256px</span>
+                <input type="range" id="sizeSlider" min="64" max="512" value="200" step="16">
+                <span class="slider-value" id="sizeValue">200px</span>
             </div>
         </div>
 
         <div class="separator"></div>
 
+        <!-- Yenileme Hızı -->
+        <div class="control-group">
+            <div class="control-label">Yenileme Hızı (Zorlama)</div>
+            <div class="slider-wrapper">
+                <input type="range" id="fpsSlider" min="30" max="240" value="144" step="1">
+                <span class="slider-value" id="fpsValue">144Hz</span>
+            </div>
+        </div>
 
+        <div class="separator"></div>
 
         <!-- Mod Seçimi -->
         <div class="control-group">
@@ -1027,31 +1036,38 @@
         const STORAGE_KEY = 'pixelfix_state';
 
         const state = {
-            canvasFrames: [],
-            animationFrames: [], // For requestAnimationFrame IDs
             count: 1,
-            size: 256,
+            size: 200,
             mode: 'classic',
+            fps: 144, // Varsayılan cihaz hızına göre
             timerMode: 0,
             bgTransparent: false,
+            epilepsyAccepted: false,
             amberMode: false,
             uiHidden: false,
-            epilepsyAccepted: false,
-            startTime: Date.now(),
-            elapsedBeforePause: 0,
-            timerInterval: null,
             panelVisible: true,
             paused: false,
-            colorCycleIndex: 0,
+
+            // Zaman Senkronizasyonu
+            startTime: undefined,
+            elapsedBeforePause: 0,
+            lastTimerUpdate: Date.now(),
+
+            // Animasyon Döngüleri
+            canvasFrames: [],
+            animationFrames: [],
+            timerInterval: null,
+            colorCycleIndex: 0, // Added this back as it was in the original state and not in the new one
             colorCycleFrame: 0,
-            oppositeToggle: false,
+            oppositeToggle: false, // Added this back as it was in the original state and not in the new one
             autoModeIndex: 0,
-            autoModeFrame: 0,
-            expertModeState: 0,
-            expertModeFrame: 0,
-            autoDynMode: null,
+            autoModeFrame: 0, // Added this back as it was in the original state and not in the new one
             autoDynFrame: 0,
-            autoDynTarget: 0
+            autoDynTarget: 0,
+            autoDynMode: null,
+            testModeIndex: 0, // Added this back as it was used in drawTest
+            expertModeState: 0, // Added this back as it was in the original state and not in the new one
+            expertModeFrame: 0
         };
 
         const MODES = {
@@ -1375,12 +1391,14 @@
             frame.appendChild(canvas);
 
             // ─── Drag Logic ───
-            let isDragging = false;
             let dragOffsetX = 0;
             let dragOffsetY = 0;
 
+            // Kinetik Gezinti (Drift) için objeyi baştan tanımla ki pointer event'leri manipüle edebilsin
+            const frameObj = { frame, canvas, vx: 0, vy: 0, isDragging: false };
+
             frame.addEventListener('pointerdown', (e) => {
-                isDragging = true;
+                frameObj.isDragging = true;
                 const rect = frame.getBoundingClientRect();
                 dragOffsetX = e.clientX - rect.left;
                 dragOffsetY = e.clientY - rect.top;
@@ -1393,7 +1411,7 @@
             });
 
             frame.addEventListener('pointermove', (e) => {
-                if (!isDragging) return;
+                if (!frameObj.isDragging) return;
                 const x = e.clientX - dragOffsetX;
                 const y = e.clientY - dragOffsetY;
                 frame.style.left = x + 'px';
@@ -1401,7 +1419,7 @@
             });
 
             frame.addEventListener('pointerup', () => {
-                isDragging = false;
+                frameObj.isDragging = false;
                 frame.style.zIndex = '';
                 // Test devam ediyorsa sarsıntıyı geri başlat
                 if (!state.paused && state.mode !== 'test') {
@@ -1410,7 +1428,7 @@
             });
 
             frame.addEventListener('lostpointercapture', () => {
-                isDragging = false;
+                frameObj.isDragging = false;
                 frame.style.zIndex = '';
                 if (!state.paused && state.mode !== 'test') {
                     frame.classList.add('running');
@@ -1427,11 +1445,11 @@
 
             // Kinetik Gezinti (Drift) için Hız Vektörleri
             // 2 ile 5 arası veya -5 ile -2 arası x/y hızları atanır
-            const vx = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
-            const vy = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
+            frameObj.vx = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
+            frameObj.vy = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
 
             document.getElementById('fixScreen').appendChild(frame);
-            return { frame, canvas, vx, vy, isDragging: false }; // objeye ekledik
+            return frameObj;
         }
 
         function startDrawing() {
@@ -1439,6 +1457,7 @@
             state.animationFrames.forEach(id => cancelAnimationFrame(id));
             state.animationFrames = [];
 
+            // Eğer uzman modundaysa veya duraklatılmışsa hiç başlatma
             if (state.paused) return;
 
             // UI Diagnostic Button Logic
@@ -1489,14 +1508,18 @@
                     left += frameObj.vx;
                     top += frameObj.vy;
 
-                    // Sınır Çarpışması (Bounce)
+                    // Sınır Çarpışması (Bounce) + Gece Kulübü Strobe Patlaması (Fazladan Efekt)
                     if (left <= 0 || left + state.size >= screenW) {
                         frameObj.vx *= -1; // Yön tersine
                         left = Math.max(0, Math.min(left, screenW - state.size));
+                        frame.style.transform = `scale(1.05) translateZ(0)`; // Anlık çarpma efekti
+                        setTimeout(() => frame.style.transform = '', 50);
                     }
                     if (top <= 0 || top + state.size >= screenH) {
                         frameObj.vy *= -1; // Yön tersine
                         top = Math.max(0, Math.min(top, screenH - state.size));
+                        frame.style.transform = `scale(1.05) translateZ(0)`; // Anlık çarpma efekti
+                        setTimeout(() => frame.style.transform = '', 50);
                     }
 
                     frame.style.left = left + 'px';
@@ -1556,9 +1579,15 @@
         // ═══════════════════════════════════════════════════════
 
         function getElapsedSeconds() {
+            // Paused ise sadece kaydedilmiş süreyi döndür
             if (state.paused) return state.elapsedBeforePause;
+
             if (!state.startTime) state.startTime = Date.now();
-            return state.elapsedBeforePause + Math.floor((Date.now() - state.startTime) / 1000);
+
+            // Mutlak zaman hesabı (Tarayıcı sekme yavaşlatma / tab throttling koruması)
+            const now = Math.floor(Date.now() / 1000);
+            const start = Math.floor(state.startTime / 1000);
+            return state.elapsedBeforePause + (now - start);
         }
 
         function updateTimer() {
@@ -2037,10 +2066,16 @@
             document.getElementById('sizeSlider').value = state.size;
             document.getElementById('sizeValue').textContent = state.size + 'px';
 
-            document.getElementById('fpsSlider').value = state.fps;
-            document.getElementById('fpsValue').textContent = state.fps + 'Hz';
+            // FPS DOM Düzeltmesi (Null Pointer crash engelleme)
+            const fpsS = document.getElementById('fpsSlider');
+            const fpsV = document.getElementById('fpsValue');
+            if (fpsS && fpsV) {
+                fpsS.value = state.fps || 144;
+                fpsV.textContent = (state.fps || 144) + 'Hz';
+            }
 
-            document.getElementById('timerStop').value = state.timerMode;
+            const timerSelect = document.getElementById('timerStop');
+            if (timerSelect) timerSelect.value = state.timerMode || 0;
 
             updateExpertUI();
 
