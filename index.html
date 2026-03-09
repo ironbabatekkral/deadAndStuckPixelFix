@@ -918,7 +918,7 @@
             <div class="mode-grid">
                 <button class="mode-btn" data-mode="expert">🎯 Uzman (Hedefli)</button>
                 <button class="mode-btn" data-mode="auto">🚀 Tam Otomatik</button>
-                <button class="mode-btn" data-mode="classic">RGB Döngüsü (Klasik)</button>
+                <button class="mode-btn active" data-mode="classic">RGB Döngüsü (Klasik)</button>
                 <button class="mode-btn" data-mode="fast">Hızlı Flaş (Agresif)</button>
                 <button class="mode-btn" data-mode="colorcycle">Tam Spektrum (Yumuşak)</button>
                 <button class="mode-btn" data-mode="bw">Siyah / Beyaz Şoku</button>
@@ -1902,7 +1902,9 @@
         // Mod seçimi
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelector('.mode-btn.active').classList.remove('active');
+                const currentActive = document.querySelector('.mode-btn.active');
+                if (currentActive) currentActive.classList.remove('active');
+
                 btn.classList.add('active');
                 state.mode = btn.dataset.mode;
                 state.colorCycleFrame = 0;
