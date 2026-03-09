@@ -1633,7 +1633,7 @@
                 pauseBtn.classList.add('paused');
                 pauseIcon.style.display = 'none';
                 playIcon.style.display = '';
-                pauseBtnText.textContent = 'Devam Et';
+                pauseBtnText.textContent = state.elapsedBeforePause === 0 ? 'Başlat' : 'Devam Et';
                 timerEl.classList.add('paused');
             } else {
                 // RESUME
@@ -2098,7 +2098,7 @@
 
             rebuildCanvasFrames();
 
-            // Timer döngüsünü kalıcı olarak başlat
+            // Timer döngüsünü kalıcı olarak başlat (Ama hemen duraklatacağız)
             if (state.timerInterval) clearInterval(state.timerInterval);
             state.timerInterval = setInterval(updateTimer, 1000);
             updateTimer();
@@ -2108,6 +2108,11 @@
 
             // Save on page unload
             window.addEventListener('beforeunload', saveState);
+
+            // SADECE BUNU EKLİYORUZ: Başlangıçta zaman ve işlem duraklatılmış olsun.
+            // Kullanıcı "Başlat" butonuna tıklamadan süre işlemesin ve onarım başlamasın.
+            state.paused = false; // togglePause'un Pause bloğunu çalıştırması için false diyoruz
+            togglePause();
         }
 
         init();
