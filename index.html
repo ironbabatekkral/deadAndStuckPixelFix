@@ -668,6 +668,7 @@
         <div class="control-group">
             <div class="control-label">Çözme Modu</div>
             <div class="mode-grid">
+                <button class="mode-btn" data-mode="expert">🎯 Uzman (Hedefli)</button>
                 <button class="mode-btn" data-mode="auto">🚀 Tam Otomatik</button>
                 <button class="mode-btn active" data-mode="classic">⚡ Klasik</button>
                 <button class="mode-btn" data-mode="fast">🚀 Hızlı</button>
@@ -680,6 +681,20 @@
         </div>
 
         <div class="separator"></div>
+
+        <!-- Hedef Piksel Rengi (Uzman Modu için) -->
+        <div class="control-group" id="expertColorGroup" style="display: none;">
+            <div class="control-label" style="color: #ff3c3c;">Hedef Renk (Arızalı Piksel)</div>
+            <select id="stuckColorSelect" class="styled-select" style="border-color: rgba(255,60,60,0.4);">
+                <option value="blue">Mavi (Sarı ↔ Siyah Şoku)</option>
+                <option value="red">Kırmızı (Turkuaz ↔ Siyah Şoku)</option>
+                <option value="green">Yeşil (Magenta ↔ Siyah Şoku)</option>
+                <option value="white">Beyaz (Agresif Siyah Şoku)</option>
+                <option value="black">Siyah (Tam Beyaz Termal Şok)</option>
+            </select>
+        </div>
+
+        <div class="separator" id="expertSeparator" style="display: none;"></div>
 
         <!-- Otomatik Kapanma (Timer) -->
         <div class="control-group">
@@ -783,10 +798,15 @@
             oppositeToggle: false,
             autoModeIndex: 0,
             autoModeFrame: 0,
-            testModeIndex: 0
+            expertModeState: 0,
+            expertModeFrame: 0,
+            autoDynMode: null,
+            autoDynFrame: 0,
+            autoDynTarget: 0
         };
 
         const MODES = {
+            expert: { label: 'Uzman (Hedefli)' },
             auto: { label: 'Tam Otomatik' },
             classic: { label: 'Klasik' },
             fast: { label: 'Hızlı' },
@@ -951,20 +971,114 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
-        // Tam Otomatik Mod (Modlar arası döngü)
-        const AUTO_MODES = [drawClassic, drawNoise, drawOpposite, drawColorCycle];
-        function drawAuto(canvas) {
-            // Saniyede 60 frame (16ms interval) varsaydığımızda, 10 saniye = 600 frame
-            state.autoModeFrame++;
-            if (state.autoModeFrame >= 600) {
-                state.autoModeFrame = 0;
-                state.autoModeIndex = (state.autoModeIndex + 1) % AUTO_MODES.length;
+        // ═══════════════════════════════════════════════════════
+        // EXPERT MODE (Targeted Sub-Pixel Reset)
+        // ═══════════════════════════════════════════════════════
+
+        // Stuck Color -> Complementary Shock Color mapping
+        const COMPLEMENTARY_COLORS = {
+            'blue': { rgb: '255, 255, 0', hex: '#FFFF00' }, // Sarı
+            'red': { rgb: '0, 255, 255', hex: '#00FFFF' },   // Turkuaz
+            'green': { rgb: '255, 0, 255', hex: '#FF00FF' }, // Magenta
+            'white': { rgb: '0, 0, 0', hex: '#000000' },     // Siyah (Ters şok için tüm transistörleri kapatma)
+            'black': { rgb: '255, 255, 255', hex: '#FFFFFF' } // Beyaz (Termal stres için tümünü açma)
+        };
+
+        // Micro-Shift Dama Tahtası Cache'i
+        let checkerboardCanvas = null;
+        function getCheckerboard() {
+            if (checkerboardCanvas) return checkerboardCanvas;
+            checkerboardCanvas = document.createElement('canvas');
+            checkerboardCanvas.width = 512 + 16;  // Kaydırma payı
+            checkerboardCanvas.height = 512 + 16; // Kaydırma payı
+            const ctx = checkerboardCanvas.getContext('2d');
+            const targetColor = COMPLEMENTARY_COLORS[document.getElementById('stuckColorSelect').value] || COMPLEMENTARY_COLORS['blue'];
+
+            const size = 4;
+            for (let y = 0; y < checkerboardCanvas.height; y += size) {
+                for (let x = 0; x < checkerboardCanvas.width; x += size) {
+                    ctx.fillStyle = ((x + y) / size) % 2 === 0 ? targetColor.hex : '#000000';
+                    ctx.fillRect(x, y, size, size);
+                }
             }
-            AUTO_MODES[state.autoModeIndex](canvas);
+            return checkerboardCanvas;
+        }
+
+        function drawExpert(canvas) {
+            const ctx = canvas.getContext('2d');
+            const stuckColor = document.getElementById('stuckColorSelect').value;
+            const targetColor = COMPLEMENTARY_COLORS[stuckColor] || COMPLEMENTARY_COLORS['blue'];
+
+            state.expertModeFrame++;
+
+            // Expert modu 3 aşamadan (state) oluşan bir döngüdür
+            // State 0: Complementary High-Freq Strobing (Sarı-Siyah şok) - 3 saniye (~180 frame)
+            // State 1: Micro-Shift Checkerboard (Dama kaydırma) - 3 saniye (~180 frame)
+            // State 2: Sine-Wave Voltage Scan (Yumuşak Parlaklık Dalgalanması) - 4 saniye (~240 frame)
+
+            if (state.expertModeFrame > 600) {
+                state.expertModeFrame = 0;
+            }
+
+            if (state.expertModeFrame < 180) {
+                // State 0: Complementary Shock
+                // Saniye bazlı aç-kapa agresifliği (rAF hızıyla)
+                const isShock = state.expertModeFrame % 2 === 0;
+                ctx.fillStyle = isShock ? targetColor.hex : '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            } else if (state.expertModeFrame < 360) {
+                // State 1: Micro-Shift Checkerboard
+                if (state.expertModeFrame === 180) checkerboardCanvas = null; // Re-cache if color changed
+                const cb = getCheckerboard();
+
+                // Her frame'de dama tahtasını 1px x ve 1px y ekseninde kaydırarak komşu manyetik çekim (Spatial Pull) yarat
+                const shiftAmt = (state.expertModeFrame % 16);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height); // Arkaplan temizle
+                ctx.drawImage(cb, -shiftAmt, -shiftAmt); // offsetX, offsetY
+
+            } else {
+                // State 2: Sine Wave Voltage Scan
+                // Math.sin ile yumuşak ama çok hızlı potansiyel fark taraması
+                // rgba(r, g, b, alpha_sine) kullanarak monitör içindeki voltaj değerlerini 0-255 arası gezeriz
+                // sin dalgası -1 ile 1 arasıdır, (sin + 1)/2 ile 0-1 arası opacity buluruz.
+
+                // Frekansı yüksek tutalım:
+                const timeStr = Date.now() / 80;
+                const sineVal = (Math.sin(timeStr) + 1) / 2; // 0.0 to 1.0
+
+                // Zemin siyah
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Üstüne Saydam Şok Rengi
+                ctx.fillStyle = `rgba(${targetColor.rgb}, ${sineVal})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // Tam Otomatik Mod (Modlar arası Rastgele AI-like Agresif Döngü)
+        const AUTO_ROSTER = [drawClassic, drawNoise, drawOpposite, drawExpert]; // Colorcycle vb. kaldırdık, saf güç
+        function drawAuto(canvas) {
+            // Eğer yeni bir döngüde isek, hedefleri randomize et
+            if (state.autoDynFrame >= state.autoDynTarget || state.autoDynMode === null) {
+                state.autoDynFrame = 0;
+                // Rastgele mod
+                const modIdx = Math.floor(Math.random() * AUTO_ROSTER.length);
+                state.autoDynMode = AUTO_ROSTER[modIdx];
+                // Rastgele süre (60fps baz alınarak: 1 saniye ila 5 saniye rastgele bir patlama)
+                // Kısa ve rastgele olması kristallerin uyum sağlamasını zorlaştırır
+                state.autoDynTarget = Math.floor(Math.random() * 240) + 60; // 60 to 300 frames (1-5 sn)
+            }
+
+            state.autoDynFrame++;
+            state.autoDynMode(canvas);
         }
 
         function getDrawFunction() {
             switch (state.mode) {
+                case 'expert': return drawExpert;
                 case 'auto': return drawAuto;
                 case 'fast': return drawFast;
                 case 'colorcycle': return drawColorCycle;
@@ -1200,6 +1314,7 @@
                 count: state.count,
                 size: state.size,
                 mode: state.mode,
+                expertColor: document.getElementById('stuckColorSelect').value,
                 timerMode: state.timerMode,
                 bgTransparent: state.bgTransparent,
                 epilepsyAccepted: state.epilepsyAccepted,
@@ -1221,6 +1336,12 @@
                 if (data.bgTransparent !== undefined) state.bgTransparent = data.bgTransparent;
                 if (data.epilepsyAccepted !== undefined) state.epilepsyAccepted = data.epilepsyAccepted;
                 if (data.elapsedSeconds) state.elapsedBeforePause = data.elapsedSeconds;
+
+                // Expert Color Load
+                if (data.expertColor) {
+                    const colorSelect = document.getElementById('stuckColorSelect');
+                    if (colorSelect) colorSelect.value = data.expertColor;
+                }
                 return true;
             } catch (e) { return false; }
         }
@@ -1310,6 +1431,27 @@
             saveState();
         });
 
+
+
+        // Uzman modu UI Göster/Gizle mantığı
+        function updateExpertUI() {
+            const expertGroup = document.getElementById('expertColorGroup');
+            const expertSep = document.getElementById('expertSeparator');
+            if (state.mode === 'expert') {
+                expertGroup.style.display = 'block';
+                expertSep.style.display = 'block';
+            } else {
+                expertGroup.style.display = 'none';
+                expertSep.style.display = 'none';
+            }
+        }
+
+        document.getElementById('stuckColorSelect').addEventListener('change', () => {
+            // Cache'i temizle ki yeni renge göre dama tahtası baştan çizilsin
+            checkerboardCanvas = null;
+            saveState();
+        });
+
         // Mod seçimi
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1318,8 +1460,14 @@
                 state.mode = btn.dataset.mode;
                 state.colorCycleFrame = 0;
                 state.autoModeIndex = 0;
-                state.autoModeFrame = 0;
+                state.autoDynFrame = 0;
+                state.autoDynTarget = 0;
+                state.autoDynMode = null;
                 state.testModeIndex = 0;
+                state.expertModeFrame = 0;
+                checkerboardCanvas = null; // reset
+
+                updateExpertUI();
 
                 startDrawing();
                 saveState();
@@ -1435,6 +1583,8 @@
             document.getElementById('fpsValue').textContent = state.fps + 'Hz';
 
             document.getElementById('timerStop').value = state.timerMode;
+
+            updateExpertUI();
 
             if (state.bgTransparent) {
                 document.body.classList.add('bg-transparent');

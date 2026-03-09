@@ -73,6 +73,9 @@ Bu proje, basit bir renk değiştirme uygulamasından öte, **LCD ve OLED panell
 | :--- | :--- | :--- |
 | **Hertz-Sync (`rAF`)** | `requestAnimationFrame` ile tam Donanım Senkronizasyonu | Frame atlaması olmadan, monitörün native Hz frekansında kesintisiz uyarı silsilesi. |
 | **Sub-Pixel Blitz** | Çapraz zıtlıklar üzerinden Complementary Stress | Arızalı alt-pikselin transistörüne maksimum voltaj farkı (0-255 anlık zıplamalar) uygulanması. |
+| **Targeted Reset (Expert)** | Mavi/Kırmızı/Yeşil bazlı spesifik zıtlık (Örn: Mavi için Sarı/Siyah) | Bozuk hücreyi kapanmaya (OFF) zorlarken etraftaki komşu renkleri tam yük (255) çalıştırarak voltaj baskısı kurmak. |
+| **Voltage Scan** | Sine-Wave (Sinüs Dalgası) Inverse Dithering | Voltajı (parlaklığı) L0 ile L255 arasında yumuşak ama çok hızlı dalgalandırarak kristalin yapışkan (viskoz) direncini kırmak. |
+| **Spatial Voltage Pull** | Micro-Shift Checkerboard (Hareketli Dama Tahtası) | Sorunlu pikselin etrafındaki komşu hücreleri her frame'de 1 piksel x/y ekseninde kaydırarak sentetik, titreşimli bir manyetik alan yaratmak. |
 | **High-Freq Noise** | Offscreen Caching ile Yüksek Frekanslı Rastgelelik | Statik piksel yapısını kırmak için sürekli değişen voltaj yükü ile kristalin yeniden dizilime zorlanması. |
 | **Luminance Masking** | Optik Güvenlik Katmanı (Amber Eye-Protection) | Terapinin uzun süreli kesintisiz uygulanabilmesi için göz sağlığını ve epilepsi riskini hafifleten UI tasarımı. |
 | **Thermal Pulse** | Panel Isıtma (Dolaylı) | Yüksek parlaklıklı beyaz stres sayesinde lokal fiziksel genleşme yaratılarak kristal hareketini (akışkanlığını) artırma ihtimali. |
