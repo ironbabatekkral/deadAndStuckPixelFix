@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="tr">
 
 <head>
@@ -58,6 +58,42 @@
             opacity: 0;
             transform: translateX(20px);
             pointer-events: none;
+        }
+
+        /* ─── UI Hidden Mode ('T' Kısayolu) ─── */
+        body.ui-hidden #controlPanel,
+        body.ui-hidden #bottomBar,
+        body.ui-hidden #togglePanelBtn,
+        body.ui-hidden #dragTip,
+        body.ui-hidden #epilepsyWarning {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transition: opacity 0.3s ease;
+        }
+
+        /* ─── Transparent Background Overlay Modu ─── */
+        body.bg-transparent {
+            background: transparent !important;
+        }
+
+        body.bg-transparent #fixScreen {
+            background: transparent !important;
+        }
+
+        /* ─── Eye Protection (Amber) Modu ─── */
+        body.amber-mode #fixScreen::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 140, 0, 0.15);
+            /* Hafif kehribar tonu */
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        body.amber-mode {
+            background: #1a1005;
+            /* Arka planı koyu bir kahve/sarıya çeker */
         }
 
         .panel-title {
@@ -157,7 +193,7 @@
         }
 
         /* ─── Slider ─── */
-        .size-slider-wrapper {
+        .slider-wrapper {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -199,7 +235,7 @@
             box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
         }
 
-        .size-value {
+        .slider-value {
             font-size: 13px;
             font-weight: 700;
             color: #00ff88;
@@ -257,6 +293,28 @@
             text-align: center;
             color: rgba(255, 255, 255, 0.3);
             letter-spacing: 1px;
+        }
+
+        /* ─── Select Box ─── */
+        select.styled-select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        select.styled-select option {
+            background: #111;
+            color: #fff;
         }
 
         /* ─── Separator ─── */
@@ -426,6 +484,95 @@
             }
         }
 
+        /* ═══════════════════════ EPILEPSY WARNING ═══════════════════════ */
+        #epilepsyWarning {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .warning-box {
+            background: #111;
+            border: 2px solid #ff3c3c;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 60, 60, 0.2);
+            color: #fff;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .warning-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .warning-title {
+            color: #ff3c3c;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .warning-text {
+            font-size: 15px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+
+        .accept-btn {
+            background: #ff3c3c;
+            color: #fff;
+            border: none;
+            padding: 14px 40px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .accept-btn:hover {
+            background: #ff5555;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 60, 60, 0.4);
+        }
+
+        /* ─── UI HIDDEN INDICATOR ─── */
+        #uiHiddenIndicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        #uiHiddenIndicator.show {
+            opacity: 1;
+        }
+
 
 
         /* ═══════════════════════ ANIMATIONS ═══════════════════════ */
@@ -460,13 +607,280 @@
         .canvas-frame.removing {
             animation: fadeOut 0.3s ease forwards;
         }
+
+        /* ═══════════════════════ DIAGNOSTIC UI (PHASE 5) ═══════════════════════ */
+        #diagnosticBtn {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 60, 60, 0.9);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border: 2px solid #ff3c3c;
+            box-shadow: 0 0 20px rgba(255, 60, 60, 0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: pulse-red 2s infinite;
+        }
+
+        #diagnosticBtn:hover {
+            background: #ff3c3c;
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        /* Targeter Overlay (Crosshair) */
+        #targetOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 9998;
+            cursor: crosshair;
+            display: none;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 100px;
+        }
+
+        .target-instructions {
+            background: rgba(255, 60, 60, 0.9);
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid #ff3c3c;
+            animation: fadeInDown 0.4s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse-red {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 60, 60, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 15px rgba(255, 60, 60, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 60, 60, 0);
+            }
+        }
+
+        /* Diagnostic Modal */
+        #diagnosticModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            /* Premium Blur Effect */
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .diagnosis-box {
+            background: #111;
+            border: 1px solid #333;
+            border-top: 4px solid #00f0ff;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            color: #fff;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .diagnosis-icon {
+            font-size: 50px;
+            margin-bottom: 20px;
+            color: #00f0ff;
+        }
+
+        .diagnosis-title {
+            color: #00f0ff;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .diagnosis-text {
+            font-size: 15px;
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: left;
+            background: rgba(0, 240, 255, 0.05);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #00f0ff;
+        }
+
+        .diagnosis-action {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .diagnosis-btn {
+            background: #00f0ff;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .diagnosis-btn:hover {
+            background: #00c0cc;
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+        }
+
+        .close-diagnosis-btn {
+            background: transparent;
+            color: #888;
+            border: 1px solid #444;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-diagnosis-btn:hover {
+            background: #222;
+            color: #fff;
+        }
+
+        .black-screen-question {
+            margin-top: 15px;
+            margin-bottom: 20px;
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .color-radios {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .color-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: #333;
+        }
+
+        .color-radio-label input {
+            accent-color: #00f0ff;
+        }
     </style>
 </head>
 
 <body>
 
+    <!-- ═══════ EPILEPSY WARNING ═══════ -->
+    <div id="epilepsyWarning">
+        <div class="warning-box">
+            <div class="warning-icon">⚠️</div>
+            <div class="warning-title">Epilepsi ve Işığa Duyarlılık Uyarısı</div>
+            <div class="warning-text">
+                Bu araç, ölü ve sıkışmış pikselleri onarmak için çok yüksek hızlarda, parlak ve zıt renklerin değiştiği
+                flaş efektleri (strobe) kullanmaktadır.<br><br>
+                <strong>Işığa duyarlı epilepsi (Photosensitive Epilepsy)</strong> veya benzeri bir nörolojik
+                rahatsızlığınız varsa, bu aracı kullanmak nöbet geçirmenize neden olabilir. Lütfen aracı başlatmadan
+                önce ekrana çok yakından bakmamaya özen gösterin.
+            </div>
+            <button class="accept-btn" id="acceptWarningBtn">Kabul Ediyorum</button>
+        </div>
+    </div>
+
+    <!-- ═══════ UI HIDDEN INDICATOR ═══════ -->
+    <div id="uiHiddenIndicator">Arayüz gizlendi. Geri getirmek için tekrar 'T' tuşuna basın.</div>
+
     <div id="fixScreen">
         <!-- Canvas frames will be dynamically added here -->
+    </div>
+
+    <!-- ═══════ DIAGNOSTIC UI (PHASE 5) ═══════ -->
+    <button id="diagnosticBtn" title="Test ekranında bir hata tespit ettim">
+        <span>⚠️ Burada Hatalı Bir Piksel Var</span>
+    </button>
+
+    <div id="targetOverlay">
+        <div class="target-instructions">Nişangah (Crosshair) Modu<br><span
+                style="font-size: 14px; font-weight: normal;">Lütfen ekrandaki sorunlu (parlak/karanlık) noktanın tam
+                üzerine tıklayın.</span></div>
+    </div>
+
+    <div id="diagnosticModal">
+        <div class="diagnosis-box">
+            <div class="diagnosis-icon">🔬</div>
+            <div class="diagnosis-title">Teşhis Raporu</div>
+
+            <div class="diagnosis-text" id="diagnosisContent">
+                <!-- Teşhis metni buraya dinamik gelecek -->
+            </div>
+
+            <div id="blackScreenOptions" class="black-screen-question" style="display:none;">
+                <strong style="color: #ffcc00;">Soru:</strong> Parlayan nokta hangi renkte yanıyor?
+                <div class="color-radios">
+                    <label class="color-radio-label"><input type="radio" name="stuckColorOpt" value="blue" checked>
+                        Mavi</label>
+                    <label class="color-radio-label"><input type="radio" name="stuckColorOpt" value="red">
+                        Kırmızı</label>
+                    <label class="color-radio-label"><input type="radio" name="stuckColorOpt" value="green">
+                        Yeşil</label>
+                </div>
+            </div>
+
+            <div class="diagnosis-action">
+                <button class="diagnosis-btn" id="applyDiagnosisBtn">👉 Tavsiye Edilen Tedaviyi Başlat</button>
+                <button class="close-diagnosis-btn" id="closeDiagnosisBtn">Kapat ve Teste Devam Et</button>
+            </div>
+        </div>
     </div>
 
     <!-- ═══════ CONTROL PANEL ═══════ -->
@@ -475,7 +889,7 @@
 
         <!-- Kare Sayısı -->
         <div class="control-group">
-            <div class="control-label">Kare Sayısı</div>
+            <div class="control-label">Kare Sayısı (Onarıcı Bölge)</div>
             <div class="count-control">
                 <button class="count-btn" id="decreaseCount" title="Kare azalt">−</button>
                 <span class="count-display" id="countDisplay">1</span>
@@ -487,10 +901,21 @@
 
         <!-- Boyut -->
         <div class="control-group">
-            <div class="control-label">Boyut</div>
-            <div class="size-slider-wrapper">
-                <input type="range" id="sizeSlider" min="128" max="512" value="256" step="16">
-                <span class="size-value" id="sizeValue">256px</span>
+            <div class="control-label">Boyut (Kare Büyüklüğü)</div>
+            <div class="slider-wrapper">
+                <input type="range" id="sizeSlider" min="64" max="512" value="200" step="16">
+                <span class="slider-value" id="sizeValue">200px</span>
+            </div>
+        </div>
+
+        <div class="separator"></div>
+
+        <!-- Yenileme Hızı -->
+        <div class="control-group">
+            <div class="control-label">Yenileme Hızı (Zorlama)</div>
+            <div class="slider-wrapper">
+                <input type="range" id="fpsSlider" min="30" max="240" value="144" step="1">
+                <span class="slider-value" id="fpsValue">144Hz</span>
             </div>
         </div>
 
@@ -500,12 +925,45 @@
         <div class="control-group">
             <div class="control-label">Çözme Modu</div>
             <div class="mode-grid">
-                <button class="mode-btn active" data-mode="classic">⚡ Klasik</button>
-                <button class="mode-btn" data-mode="fast">🚀 Hızlı</button>
-                <button class="mode-btn" data-mode="colorcycle">🌈 Renk Döngüsü</button>
-                <button class="mode-btn" data-mode="bw">◐ Siyah-Beyaz</button>
+                <button class="mode-btn" data-mode="expert">🎯 Uzman (Hedefli)</button>
+                <button class="mode-btn" data-mode="auto">🚀 Tam Otomatik</button>
+                <button class="mode-btn active" data-mode="classic">RGB Döngüsü (Klasik)</button>
+                <button class="mode-btn" data-mode="fast">Hızlı Flaş (Agresif)</button>
+                <button class="mode-btn" data-mode="colorcycle">Tam Spektrum (Yumuşak)</button>
+                <button class="mode-btn" data-mode="bw">Siyah / Beyaz Şoku</button>
+                <button class="mode-btn" data-mode="noise">Karıncalanma (Statik)</button>
+                <button class="mode-btn" data-mode="opposite">Zıt Renk Şoku</button>
+                <button class="mode-btn" data-mode="drift">Gezici (Drift)</button>
+                <button class="mode-btn" data-mode="test">🔍 Piksel Testi</button>
             </div>
+        </div>
 
+        <div class="separator"></div>
+
+        <!-- Hedef Piksel Rengi (Uzman Modu için) -->
+        <div class="control-group" id="expertColorGroup" style="display: none;">
+            <div class="control-label" style="color: #ff3c3c;">Hedef Renk (Arızalı Piksel)</div>
+            <select id="stuckColorSelect" class="styled-select" style="border-color: rgba(255,60,60,0.4);">
+                <option value="blue">Mavi (Sarı ↔ Siyah Şoku)</option>
+                <option value="red">Kırmızı (Turkuaz ↔ Siyah Şoku)</option>
+                <option value="green">Yeşil (Magenta ↔ Siyah Şoku)</option>
+                <option value="white">Beyaz (Agresif Siyah Şoku)</option>
+                <option value="black">Siyah (Tam Beyaz Termal Şok)</option>
+            </select>
+        </div>
+
+        <div class="separator" id="expertSeparator" style="display: none;"></div>
+
+        <!-- Otomatik Kapanma (Timer) -->
+        <div class="control-group">
+            <div class="control-label">Otomatik Durdur (Zamanlayıcı)</div>
+            <select id="timerStop" class="styled-select">
+                <option value="0">Sürekli Çalıştır</option>
+                <option value="5">5 Dakika Sonra Durdur</option>
+                <option value="10">10 Dakika Sonra Durdur</option>
+                <option value="20">20 Dakika Sonra Durdur (Önerilen)</option>
+                <option value="60">60 Dakika Sonra Durdur</option>
+            </select>
         </div>
 
         <div class="separator"></div>
@@ -513,8 +971,12 @@
         <!-- Timer -->
         <div class="control-group">
             <div class="control-label">Çalışma Süresi</div>
-            <div class="timer-display" id="timerDisplay">00:00</div>
-            <div class="timer-label">DAKİKA : SANİYE</div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: center;">
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+                <button class="count-btn" id="resetTimerBtn" title="Süreyi Sıfırla"
+                    style="font-size: 14px; padding: 0 15px; width: auto; background: #333; height: 35px;">Temizle</button>
+            </div>
+            <div class="timer-label">SAAT : DAKİKA : SANİYE</div>
         </div>
     </div>
 
@@ -553,6 +1015,15 @@
             </svg>
             Panel Gizle
         </button>
+        <button class="bar-btn" id="amberBtn" title="Göz Koruması / Amber Modu (A)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <path d="M12 8v4"></path>
+                <path d="M12 16h.01"></path>
+            </svg>
+            Göz Koruması
+        </button>
     </div>
 
     <!-- ═══════ DRAG TIP ═══════ -->
@@ -569,25 +1040,51 @@
         const STORAGE_KEY = 'pixelfix_state';
 
         const state = {
-            canvasFrames: [],
-            intervals: [],
             count: 1,
-            size: 256,
+            size: 200,
             mode: 'classic',
-            startTime: Date.now(),
-            elapsedBeforePause: 0,
-            timerInterval: null,
+            fps: 144, // Varsayılan cihaz hızına göre
+            timerMode: 0,
+            bgTransparent: false,
+            epilepsyAccepted: false,
+            amberMode: false,
+            uiHidden: false,
             panelVisible: true,
             paused: false,
-            colorCycleIndex: 0,
-            colorCycleFrame: 0
+
+            // Zaman Senkronizasyonu
+            startTime: undefined,
+            elapsedBeforePause: 0,
+            lastTimerUpdate: Date.now(),
+
+            // Animasyon Döngüleri
+            canvasFrames: [],
+            animationFrames: [],
+            timerInterval: null,
+            colorCycleIndex: 0, // Added this back as it was in the original state and not in the new one
+            colorCycleFrame: 0,
+            oppositeToggle: false, // Added this back as it was in the original state and not in the new one
+            autoModeIndex: 0,
+            autoModeFrame: 0, // Added this back as it was in the original state and not in the new one
+            autoDynFrame: 0,
+            autoDynTarget: 0,
+            autoDynMode: null,
+            testModeIndex: 0, // Added this back as it was used in drawTest
+            expertModeState: 0, // Added this back as it was in the original state and not in the new one
+            expertModeFrame: 0
         };
 
         const MODES = {
-            classic: { interval: 10, label: 'Klasik', speed: 1 },
-            fast: { interval: 5, label: 'Hızlı', speed: 2 },
-            colorcycle: { interval: 16, label: 'Renk Döngüsü', speed: 2 },
-            bw: { interval: 10, label: 'Siyah-Beyaz', speed: 1 }
+            expert: { label: 'Uzman (Hedefli)' },
+            auto: { label: 'Tam Otomatik' },
+            classic: { label: 'Klasik' },
+            fast: { label: 'Hızlı' },
+            colorcycle: { label: 'Renk Döngüsü' },
+            bw: { label: 'Siyah-Beyaz' },
+            noise: { label: 'Karıncalanma' },
+            opposite: { label: 'Zıt Renkler' },
+            drift: { label: 'Gezici (Drift)' },
+            test: { label: 'Piksel Testi' }
         };
 
         const COLORS_CYCLE = [
@@ -669,30 +1166,203 @@
 
         function drawBlackWhite(canvas) {
             const ctx = canvas.getContext('2d');
-            const blockSize = 64;
-            const imageData = ctx.createImageData(blockSize, blockSize);
+            ctx.fillStyle = Math.random() >= 0.5 ? '#FFFFFF' : '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
-            for (let i = 0; i < blockSize * blockSize; i++) {
-                const p = i * 4;
-                const val = Math.random() >= 0.5 ? 255 : 0;
-                imageData.data[p] = val;
-                imageData.data[p + 1] = val;
-                imageData.data[p + 2] = val;
-                imageData.data[p + 3] = 255;
+        // Noise (Karıncalanma) Modu - Offscreen Caching (CPU Optimizasyonu)
+        const cachedNoiseFrames = [];
+        let isNoiseCached = false;
+
+        function preCacheNoise() {
+            if (isNoiseCached) return;
+            // Generate 10 different noise frames to cycle through
+            for (let f = 0; f < 10; f++) {
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = 512; // Max size
+                offCanvas.height = 512;
+                const ctx = offCanvas.getContext('2d');
+
+                const blockSize = 8; // Larger blocks = less CPU, clearer noise
+                const imageData = ctx.createImageData(blockSize, blockSize);
+
+                for (let y = 0; y < offCanvas.height; y += blockSize) {
+                    for (let x = 0; x < offCanvas.width; x += blockSize) {
+                        const val = Math.random() >= 0.5 ? 255 : 0;
+                        for (let i = 0; i < blockSize * blockSize; i++) {
+                            const p = i * 4;
+                            imageData.data[p] = val;     // R
+                            imageData.data[p + 1] = val; // G
+                            imageData.data[p + 2] = val; // B
+                            imageData.data[p + 3] = 255; // A
+                        }
+                        ctx.putImageData(imageData, x, y);
+                    }
+                }
+                cachedNoiseFrames.push(offCanvas);
             }
+            isNoiseCached = true;
+        }
 
-            for (let y = 0; y < canvas.height; y += blockSize) {
-                for (let x = 0; x < canvas.width; x += blockSize) {
-                    ctx.putImageData(imageData, x, y);
+        function drawNoise(canvas) {
+            if (!isNoiseCached) preCacheNoise();
+            const ctx = canvas.getContext('2d');
+            // Rastgele bir cache seç ve direkt ekrana bas (CPU'suz blitting)
+            const randomCache = cachedNoiseFrames[Math.floor(Math.random() * cachedNoiseFrames.length)];
+            ctx.drawImage(randomCache, 0, 0, canvas.width, canvas.height);
+        }
+
+        // Zıt Renkler (Complementary Colors) Modu
+        const OPPOSITE_PAIRS = [
+            ['#FF0000', '#00FFFF'], // Red - Cyan
+            ['#00FF00', '#FF00FF'], // Green - Magenta
+            ['#0000FF', '#FFFF00']  // Blue - Yellow
+        ];
+
+        function drawOpposite(canvas) {
+            const ctx = canvas.getContext('2d');
+            state.oppositeToggle = !state.oppositeToggle;
+
+            // Rastgele bir pair seç
+            if (state.oppositeToggle) {
+                state.currentOppositePair = OPPOSITE_PAIRS[Math.floor(Math.random() * OPPOSITE_PAIRS.length)];
+                ctx.fillStyle = state.currentOppositePair[0];
+            } else {
+                ctx.fillStyle = state.currentOppositePair ? state.currentOppositePair[1] : '#FFFFFF';
+            }
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Sabit Renkler (Test Modu)
+        const TEST_COLORS = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF', '#000000'];
+        const TEST_COLOR_NAMES = {
+            '#FF0000': 'Kırmızı (Red)',
+            '#00FF00': 'Yeşil (Green)',
+            '#0000FF': 'Mavi (Blue)',
+            '#FFFFFF': 'Beyaz (White)',
+            '#000000': 'Siyah (Black)'
+        };
+
+        function drawTest(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = TEST_COLORS[state.testModeIndex % TEST_COLORS.length];
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // ═══════════════════════════════════════════════════════
+        // EXPERT MODE (Targeted Sub-Pixel Reset)
+        // ═══════════════════════════════════════════════════════
+
+        // Stuck Color -> Complementary Shock Color mapping
+        const COMPLEMENTARY_COLORS = {
+            'blue': { rgb: '255, 255, 0', hex: '#FFFF00' }, // Sarı
+            'red': { rgb: '0, 255, 255', hex: '#00FFFF' },   // Turkuaz
+            'green': { rgb: '255, 0, 255', hex: '#FF00FF' }, // Magenta
+            'white': { rgb: '0, 0, 0', hex: '#000000' },     // Siyah (Ters şok için tüm transistörleri kapatma)
+            'black': { rgb: '255, 255, 255', hex: '#FFFFFF' } // Beyaz (Termal stres için tümünü açma)
+        };
+
+        // Micro-Shift Dama Tahtası Cache'i
+        let checkerboardCanvas = null;
+        function getCheckerboard() {
+            if (checkerboardCanvas) return checkerboardCanvas;
+            checkerboardCanvas = document.createElement('canvas');
+            checkerboardCanvas.width = 512 + 16;  // Kaydırma payı
+            checkerboardCanvas.height = 512 + 16; // Kaydırma payı
+            const ctx = checkerboardCanvas.getContext('2d');
+            const targetColor = COMPLEMENTARY_COLORS[document.getElementById('stuckColorSelect').value] || COMPLEMENTARY_COLORS['blue'];
+
+            const size = 4;
+            for (let y = 0; y < checkerboardCanvas.height; y += size) {
+                for (let x = 0; x < checkerboardCanvas.width; x += size) {
+                    ctx.fillStyle = ((x + y) / size) % 2 === 0 ? targetColor.hex : '#000000';
+                    ctx.fillRect(x, y, size, size);
                 }
             }
+            return checkerboardCanvas;
+        }
+
+        function drawExpert(canvas) {
+            const ctx = canvas.getContext('2d');
+            const stuckColor = document.getElementById('stuckColorSelect').value;
+            const targetColor = COMPLEMENTARY_COLORS[stuckColor] || COMPLEMENTARY_COLORS['blue'];
+
+            state.expertModeFrame++;
+
+            // Phase 6 Hyper-Shock Engine: 600 frame'lik döngü (~10 saniye @60Hz, ~3 saniye @200Hz)
+            if (state.expertModeFrame > 600) {
+                state.expertModeFrame = 0;
+            }
+
+            if (state.expertModeFrame < 200) {
+                // AŞAMA 1: Hyper-Strobing (Voltaj Şoku)
+                // rAF hızıyla tam senkronize, saniyede Hz kadar yanıp sönme
+                const isShock = (state.expertModeFrame % 2) === 0;
+                ctx.fillStyle = isShock ? targetColor.hex : '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            } else if (state.expertModeFrame < 400) {
+                // AŞAMA 2: Spatial Earthquake (Mikro-Deprem)
+                // Kristali fiziksel olarak sarsmak için dama tahtasını kaotik titretir
+                if (state.expertModeFrame === 200) checkerboardCanvas = null;
+                const cb = getCheckerboard();
+
+                // Rastgele -3px ile +3px arası titreme (Vibration)
+                const jitterX = (Math.random() * 6 - 3);
+                const jitterY = (Math.random() * 6 - 3);
+
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(cb, jitterX, jitterY);
+
+            } else {
+                // AŞAMA 3: Sine Wave Voltage Scan (Kristal Akışkanlığı)
+                // Parlaklığı dalgalandırarak kristal düğümünü çözer
+                const timeStr = Date.now() / 40;
+                const sineVal = (Math.sin(timeStr) + 1) / 2;
+
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Termal Enjeksiyon: Dalganın tepesinde anlık BEYAZ FLAŞ (Direnç kırma)
+                if (sineVal > 0.97) {
+                    ctx.fillStyle = '#FFFFFF';
+                } else {
+                    ctx.fillStyle = `rgba(${targetColor.rgb}, ${sineVal})`;
+                }
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        // Tam Otomatik Mod (Kaotik AI-like Agresif Döngü)
+        const AUTO_ROSTER = [drawClassic, drawNoise, drawOpposite, drawExpert];
+        function drawAuto(canvas) {
+            // Eğer yeni bir döngüde isek, hedefleri randomize et (Phase 6: Daha kısa, daha vahşi)
+            if (state.autoDynFrame >= state.autoDynTarget || state.autoDynMode === null) {
+                state.autoDynFrame = 0;
+                // Rastgele mod
+                const modIdx = Math.floor(Math.random() * AUTO_ROSTER.length);
+                state.autoDynMode = AUTO_ROSTER[modIdx];
+
+                // Saliselerle değişen (30 frame = ~0.5 sn) ile (180 frame = ~3 sn) arası kaotik patlamalar
+                state.autoDynTarget = Math.floor(Math.random() * 150) + 30;
+            }
+
+            state.autoDynFrame++;
+            state.autoDynMode(canvas);
         }
 
         function getDrawFunction() {
             switch (state.mode) {
+                case 'expert': return drawExpert;
+                case 'auto': return drawAuto;
                 case 'fast': return drawFast;
                 case 'colorcycle': return drawColorCycle;
                 case 'bw': return drawBlackWhite;
+                case 'noise': return drawNoise;
+                case 'opposite': return drawOpposite;
+                case 'drift': return drawAuto; // Ekranda gezerken, içindeki renk motoru AI-Otomatik (agresif renkler) olacak
+                case 'test': return drawTest;
                 default: return drawClassic;
             }
         }
@@ -726,22 +1396,27 @@
             frame.appendChild(canvas);
 
             // ─── Drag Logic ───
-            let isDragging = false;
             let dragOffsetX = 0;
             let dragOffsetY = 0;
 
+            // Kinetik Gezinti (Drift) için objeyi baştan tanımla ki pointer event'leri manipüle edebilsin
+            const frameObj = { frame, canvas, vx: 0, vy: 0, isDragging: false };
+
             frame.addEventListener('pointerdown', (e) => {
-                isDragging = true;
+                frameObj.isDragging = true;
                 const rect = frame.getBoundingClientRect();
                 dragOffsetX = e.clientX - rect.left;
                 dragOffsetY = e.clientY - rect.top;
                 frame.style.zIndex = 100;
                 frame.setPointerCapture(e.pointerId);
                 hideDragTip();
+
+                // Animasyon sürüklemeyi bozduğu için taşıma anında titreşimi kes
+                frame.classList.remove('running');
             });
 
             frame.addEventListener('pointermove', (e) => {
-                if (!isDragging) return;
+                if (!frameObj.isDragging) return;
                 const x = e.clientX - dragOffsetX;
                 const y = e.clientY - dragOffsetY;
                 frame.style.left = x + 'px';
@@ -749,37 +1424,141 @@
             });
 
             frame.addEventListener('pointerup', () => {
-                isDragging = false;
+                frameObj.isDragging = false;
                 frame.style.zIndex = '';
+                // Test devam ediyorsa sarsıntıyı geri başlat
+                if (!state.paused && state.mode !== 'test') {
+                    frame.classList.add('running');
+                }
             });
 
             frame.addEventListener('lostpointercapture', () => {
-                isDragging = false;
+                frameObj.isDragging = false;
                 frame.style.zIndex = '';
+                if (!state.paused && state.mode !== 'test') {
+                    frame.classList.add('running');
+                }
             });
 
+            // Tıklama ile Test Modunda renk değiştirme
+            frame.addEventListener('click', () => {
+                if (state.mode === 'test') {
+                    state.testModeIndex++;
+                    startDrawing(); // Ekranı hemen güncellemek için tetikle
+                }
+            });
+
+            // Kinetik Gezinti (Drift) için Hız Vektörleri
+            // 2 ile 5 arası veya -5 ile -2 arası x/y hızları atanır
+            frameObj.vx = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
+            frameObj.vy = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 3 + 2);
+
             document.getElementById('fixScreen').appendChild(frame);
-            return { frame, canvas };
+            return frameObj;
         }
 
         function startDrawing() {
-            // Clear existing intervals
-            state.intervals.forEach(id => clearInterval(id));
-            state.intervals = [];
+            // Animasyonları iptal et
+            state.animationFrames.forEach(id => cancelAnimationFrame(id));
+            state.animationFrames = [];
+
+            // Eğer uzman modundaysa veya duraklatılmışsa hiç başlatma
+            if (state.paused) return;
+
+            // UI Diagnostic Button Logic
+            const diagBtn = document.getElementById('diagnosticBtn');
+            if (state.mode === 'test') {
+                diagBtn.style.display = 'flex';
+            } else {
+                diagBtn.style.display = 'none';
+            }
 
             const drawFn = getDrawFunction();
-            const interval = MODES[state.mode].interval;
 
-            state.canvasFrames.forEach(({ canvas }) => {
-                const id = setInterval(() => drawFn(canvas), interval);
-                state.intervals.push(id);
+            // Eğer test modu ise, interval gereksiz. İlk çizimi yapıp bırak.
+            if (state.mode === 'test') {
+                state.canvasFrames.forEach(({ canvas, frame }) => {
+                    frame.classList.remove('running'); // Test modunda sarsıntı olmasın
+                    drawFn(canvas);
+                });
+                return;
+            }
+
+            // Normal modlarda sarsıntıyı (Kinematic Vibration) başlat
+            state.canvasFrames.forEach(({ frame }) => {
+                frame.classList.add('running');
+            });
+
+            // Fast modu için, her requestAnimationFrame frame'inde 2 kez renk çizebiliriz 
+            let drawLoop = (frameObj) => {
+                const now = performance.now();
+                if (!frameObj.lastDrawTime) frameObj.lastDrawTime = now;
+                const elapsed = now - frameObj.lastDrawTime;
+
+                // Eğer fps max ise (230+) interval yok sayılır (rAF kilitli)
+                const fpsInterval = state.fps >= 230 ? 0 : (1000 / state.fps);
+
+                // 3ms tolerans payı ile rAF ufak gecikmelerde frame atlamaz (ultra-fast strobe korunur)
+                if (elapsed >= Math.max(0, fpsInterval - 3)) {
+                    frameObj.lastDrawTime = now;
+
+                    const { canvas, frame } = frameObj;
+
+                    if (state.mode === 'fast') {
+                        drawFn(canvas); // Double flush logic for ultra fast
+                        drawFn(canvas);
+                    } else {
+                        drawFn(canvas);
+                    }
+
+                    // KINETIC DRIFT (Ekranda Gezinme) Mantığı
+                    if (state.mode === 'drift' && !state.paused && !frameObj.isDragging) {
+                        const screenW = window.innerWidth;
+                        const screenH = window.innerHeight;
+
+                        // DOM'dan mevcut konumu al
+                        let left = parseFloat(frame.style.left) || 0;
+                        let top = parseFloat(frame.style.top) || 0;
+
+                        // Koordinatları vektör kadar artır
+                        left += frameObj.vx;
+                        top += frameObj.vy;
+
+                        // Sınır Çarpışması (Bounce) + Gece Kulübü Strobe Patlaması (Fazladan Efekt)
+                        if (left <= 0 || left + state.size >= screenW) {
+                            frameObj.vx *= -1; // Yön tersine
+                            left = Math.max(0, Math.min(left, screenW - state.size));
+                            frame.style.transform = `scale(1.05) translateZ(0)`; // Anlık çarpma efekti
+                            setTimeout(() => frame.style.transform = '', 50);
+                        }
+                        if (top <= 0 || top + state.size >= screenH) {
+                            frameObj.vy *= -1; // Yön tersine
+                            top = Math.max(0, Math.min(top, screenH - state.size));
+                            frame.style.transform = `scale(1.05) translateZ(0)`; // Anlık çarpma efekti
+                            setTimeout(() => frame.style.transform = '', 50);
+                        }
+
+                        frame.style.left = left + 'px';
+                        frame.style.top = top + 'px';
+                    }
+                }
+
+                if (!state.paused) {
+                    const id = requestAnimationFrame(() => drawLoop(frameObj));
+                    state.animationFrames.push(id);
+                }
+            };
+
+            state.canvasFrames.forEach((frameObj) => {
+                const id = requestAnimationFrame(() => drawLoop(frameObj));
+                state.animationFrames.push(id);
             });
         }
 
         function rebuildCanvasFrames() {
-            // Clear existing
-            state.intervals.forEach(id => clearInterval(id));
-            state.intervals = [];
+            // Animasyonları iptal et
+            state.animationFrames.forEach(id => cancelAnimationFrame(id));
+            state.animationFrames = [];
 
             const fixScreen = document.getElementById('fixScreen');
             // Remove old frames
@@ -817,16 +1596,44 @@
         // ═══════════════════════════════════════════════════════
 
         function getElapsedSeconds() {
+            // Paused ise sadece kaydedilmiş süreyi döndür
             if (state.paused) return state.elapsedBeforePause;
-            return state.elapsedBeforePause + Math.floor((Date.now() - state.startTime) / 1000);
+
+            if (!state.startTime) state.startTime = Date.now();
+
+            // Mutlak zaman hesabı (Tarayıcı sekme yavaşlatma / tab throttling koruması)
+            const now = Math.floor(Date.now() / 1000);
+            const start = Math.floor(state.startTime / 1000);
+            return state.elapsedBeforePause + (now - start);
         }
 
         function updateTimer() {
             const elapsed = getElapsedSeconds();
-            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const hours = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+            const minutes = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
             const seconds = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('timerDisplay').textContent = `${minutes}:${seconds}`;
+
+            document.getElementById('timerDisplay').textContent = `${hours}:${minutes}:${seconds}`;
+
+            // Auto-stop logic
+            if (state.timerMode > 0 && !state.paused) {
+                const targetSeconds = state.timerMode * 60;
+                if (elapsed >= targetSeconds) {
+                    togglePause();
+                    alert(`Zamanlayıcı süresi doldu (${state.timerMode} dakika). Piksel onarımı durduruldu. Ekranınızın dinlenmesine izin verin.`);
+                }
+            }
         }
+
+        document.getElementById('resetTimerBtn').addEventListener('click', () => {
+            state.elapsedBeforePause = 0;
+            state.startTime = Date.now();
+            updateTimer();
+            if (state.paused) {
+                document.getElementById('pauseBtnText').textContent = 'Başlat';
+            }
+            saveState();
+        });
 
         // ═══════════════════════════════════════════════════════
         // PAUSE / RESUME
@@ -843,14 +1650,17 @@
                 // PAUSE
                 state.paused = true;
                 state.elapsedBeforePause = getElapsedSeconds();
-                state.intervals.forEach(id => clearInterval(id));
-                state.intervals = [];
+                state.animationFrames.forEach(id => cancelAnimationFrame(id));
+                state.animationFrames = [];
                 clearInterval(state.timerInterval);
+
+                // Sarsıntıyı kes
+                state.canvasFrames.forEach(({ frame }) => frame.classList.remove('running'));
 
                 pauseBtn.classList.add('paused');
                 pauseIcon.style.display = 'none';
                 playIcon.style.display = '';
-                pauseBtnText.textContent = 'Devam Et';
+                pauseBtnText.textContent = state.elapsedBeforePause === 0 ? 'Başlat' : 'Devam Et';
                 timerEl.classList.add('paused');
             } else {
                 // RESUME
@@ -877,6 +1687,10 @@
                 count: state.count,
                 size: state.size,
                 mode: state.mode,
+                expertColor: document.getElementById('stuckColorSelect').value,
+                timerMode: state.timerMode,
+                bgTransparent: state.bgTransparent,
+                epilepsyAccepted: state.epilepsyAccepted,
                 elapsedSeconds: getElapsedSeconds(),
                 savedAt: Date.now()
             };
@@ -889,9 +1703,25 @@
                 if (!raw) return false;
                 const data = JSON.parse(raw);
                 if (data.count) state.count = Math.min(6, Math.max(1, data.count));
-                if (data.size) state.size = Math.min(512, Math.max(128, data.size));
+                if (data.size) state.size = Math.min(512, Math.max(64, data.size));
                 if (data.mode && MODES[data.mode]) state.mode = data.mode;
-                if (data.elapsedSeconds) state.elapsedBeforePause = data.elapsedSeconds;
+                if (data.timerMode !== undefined) state.timerMode = data.timerMode;
+                if (data.bgTransparent !== undefined) state.bgTransparent = data.bgTransparent;
+                if (data.epilepsyAccepted !== undefined) state.epilepsyAccepted = data.epilepsyAccepted;
+
+                // F5 Yenilemesinde süreyi dondurulmuş (elapsed) olarak yükle,
+                // init fonksiyonu startTime'ı Date.now() yapıp sayacı devam ettirecek.
+                if (data.elapsedSeconds) {
+                    state.elapsedBeforePause = data.elapsedSeconds;
+                } else {
+                    state.elapsedBeforePause = 0;
+                }
+
+                // Expert Color Load
+                if (data.expertColor) {
+                    const colorSelect = document.getElementById('stuckColorSelect');
+                    if (colorSelect) colorSelect.value = data.expertColor;
+                }
                 return true;
             } catch (e) { return false; }
         }
@@ -933,9 +1763,19 @@
         // Auto-hide after 8 seconds
         setTimeout(hideDragTip, 8000);
 
-        // ═══════════════════════════════════════════════════════
-        // EVENT LISTENERS
-        // ═══════════════════════════════════════════════════════
+        // Kısayollar gösterimi
+        function showUiHiddenIndicator() {
+            const ind = document.getElementById('uiHiddenIndicator');
+            ind.classList.add('show');
+            setTimeout(() => { ind.classList.remove('show'); }, 3000);
+        }
+
+        // Epilepsi Onayı
+        document.getElementById('acceptWarningBtn').addEventListener('click', () => {
+            document.getElementById('epilepsyWarning').style.display = 'none';
+            state.epilepsyAccepted = true;
+            saveState();
+        });
 
         // Kare sayısı
         document.getElementById('increaseCount').addEventListener('click', () => {
@@ -954,7 +1794,6 @@
             saveState();
         });
 
-        // Boyut slider
         const sizeSlider = document.getElementById('sizeSlider');
         const sizeValueEl = document.getElementById('sizeValue');
 
@@ -965,14 +1804,179 @@
             saveState();
         });
 
+        // Timer dropdown
+        const timerStopSelect = document.getElementById('timerStop');
+        timerStopSelect.addEventListener('change', () => {
+            state.timerMode = parseInt(timerStopSelect.value);
+            saveState();
+        });
+
+
+
+        // Uzman modu UI Göster/Gizle mantığı
+        function updateExpertUI() {
+            const expertGroup = document.getElementById('expertColorGroup');
+            const expertSep = document.getElementById('expertSeparator');
+            if (state.mode === 'expert') {
+                expertGroup.style.display = 'block';
+                expertSep.style.display = 'block';
+            } else {
+                expertGroup.style.display = 'none';
+                expertSep.style.display = 'none';
+            }
+        }
+
+        document.getElementById('stuckColorSelect').addEventListener('change', () => {
+            // Cache'i temizle ki yeni renge göre dama tahtası baştan çizilsin
+            checkerboardCanvas = null;
+            saveState();
+        });
+
+        // ═══════════════════════════════════════════════════════
+        // DIAGNOSTIC ENGINE & TARGETER (Phase 5)
+        // ═══════════════════════════════════════════════════════
+
+        const diagBtn = document.getElementById('diagnosticBtn');
+        const targetOverlay = document.getElementById('targetOverlay');
+        const diagModal = document.getElementById('diagnosticModal');
+        const diagContent = document.getElementById('diagnosisContent');
+        const applyDiagBtn = document.getElementById('applyDiagnosisBtn');
+        const closeDiagBtn = document.getElementById('closeDiagnosisBtn');
+        const blackScreenOpts = document.getElementById('blackScreenOptions');
+
+        let recommendedColor = 'white';
+        let targetX = -1;
+        let targetY = -1;
+
+        diagBtn.addEventListener('click', () => {
+            // Activate Targeter Crosshair Mode
+            diagBtn.style.display = 'none'; // Hide the button itself
+            targetOverlay.style.display = 'flex';
+        });
+
+        targetOverlay.addEventListener('click', (e) => {
+            // Nişangah tıklaması gerçekleşti
+            targetX = e.clientX;
+            targetY = e.clientY;
+
+            targetOverlay.style.display = 'none';
+            if (!state.paused) togglePause(); // Testi duraklat
+
+            showDiagnosticModal();
+        });
+
+        function showDiagnosticModal() {
+            const currentColorHex = TEST_COLORS[state.testModeIndex % TEST_COLORS.length];
+            const colorName = TEST_COLOR_NAMES[currentColorHex];
+
+            blackScreenOpts.style.display = 'none';
+            let diagnosticReport = '';
+
+            // Teşhis Matrisi
+            if (currentColorHex === '#000000') {
+                diagnosticReport = `
+                    <strong>Test Ekranı:</strong> ${colorName}<br>
+                    <strong>Görülen Hata:</strong> Parlayan (Renkli) Nokta<br><br>
+                    <strong>Teşhis:</strong> <u>Stuck Pixel (Enerji Yığılması).</u> Gördüğünüz renkli alt-pikselin transistörü 'AÇIK' (OFF komutu almıyor) konumunda takılı kalmış durumda.<br><br>
+                    <strong>Tavsiye:</strong> Lütfen aşağıdaki seçenekten parlayan rengi seçin. Etrafındaki komşu piksellere tam yük (255) verilirken arızalı piksele "Zıt Renk Şoku" uygulayarak hücresel bazda resetlenmeye zorlanacaktır.
+                `;
+                blackScreenOpts.style.display = 'block';
+                recommendedColor = 'from_radio';
+
+            } else if (currentColorHex === '#FFFFFF') {
+                diagnosticReport = `
+                    <strong>Test Ekranı:</strong> ${colorName}<br>
+                    <strong>Görülen Hata:</strong> Karanlık Nokta (Siyah)<br><br>
+                    <strong>Teşhis:</strong> <u>Dead Cell (Tam Güç Kaybı).</u> Hücre tüm alt-pikselleriyle tamamen kapalı veya ağır bir uyku (dormant) halinde.<br><br>
+                    <strong>Tavsiye:</strong> Cihazınıza şoklama uygularken, o bölgeye <em>parmağınızla/kalem silgisiyle çok hafif masaj (bastırma)</em> yapmanız önerilir. Zıt renk şokları tek piksellerde işe yarar, tam hücre ölümlerinde "Termal Uyarı" (Tam Beyaz/Siyah geçişleri) daha uygundur.
+                `;
+                recommendedColor = 'black';
+
+            } else {
+                diagnosticReport = `
+                    <strong>Test Ekranı:</strong> ${colorName}<br>
+                    <strong>Görülen Hata:</strong> Siyah / Karanlık Nokta<br><br>
+                    <strong>Teşhis:</strong> <u>Dormant Sub-Pixel (Ağır Uyku).</u> ${colorName.split(' ')[0]} alt-pikseli ölü olabilir, ancak şanslıysanız sadece ağır bir uyku halindedir veya içindeki likit kristalin viskozitesi düğümlenmiştir.<br><br>
+                    <strong>Tavsiye:</strong> Umudunuzu kaybetmeyin. İlgili renk donanımına "Sine-Wave Voltage Scan" (Yumuşak Parlaklık Dalgalanması) ve "Micro-Shift Alan Çekimi" algoritmamızı uygulayarak viskoziteyi kırmayı ve uyuyan transistörü dürtmeyi tavsiye ediyoruz.
+                `;
+
+                if (currentColorHex === '#FF0000') recommendedColor = 'red';
+                else if (currentColorHex === '#00FF00') recommendedColor = 'green';
+                else if (currentColorHex === '#0000FF') recommendedColor = 'blue';
+            }
+
+            // X-Y Işınlanma Bilgisi
+            diagnosticReport += `
+                <div style="margin-top:15px; padding: 10px; background: rgba(0,255,136,0.1); border-left: 3px solid #00ff88; color: #00ff88; font-size: 13px;">
+                🎯 <strong>Otomatik Işınlama:</strong> Tespit ettiğiniz (X:${targetX}, Y:${targetY}) noktasına, Onarıcı Kare sistem tarafından otomatik olarak ışınlanacaktır.
+                </div>
+            `;
+
+            diagContent.innerHTML = diagnosticReport;
+            diagModal.style.display = 'flex';
+        }
+
+        closeDiagBtn.addEventListener('click', () => {
+            diagModal.style.display = 'none';
+            if (state.mode === 'test') {
+                diagBtn.style.display = 'flex'; // Geri getir
+            }
+            if (state.paused) togglePause();
+        });
+
+        applyDiagBtn.addEventListener('click', () => {
+            diagModal.style.display = 'none';
+
+            // Otomatik Uzman Modu Seçimi
+            document.querySelector('.mode-btn.active').classList.remove('active');
+            document.querySelector('.mode-btn[data-mode="expert"]').classList.add('active');
+            state.mode = 'expert';
+
+            // Teşhisten gelen rengi ayarla
+            let applyColor = recommendedColor;
+            if (recommendedColor === 'from_radio') {
+                const checkedRadio = document.querySelector('input[name="stuckColorOpt"]:checked');
+                applyColor = checkedRadio ? checkedRadio.value : 'blue';
+            }
+            document.getElementById('stuckColorSelect').value = applyColor;
+
+            // KAREYİ IŞINLA (Cerrahi Müdahale)
+            if (state.canvasFrames.length > 0 && targetX !== -1 && targetY !== -1) {
+                const mainFrame = state.canvasFrames[0].frame;
+                // Koordinatı tam merkezleyecek şekilde ayarla
+                mainFrame.style.left = (targetX - state.size / 2) + 'px';
+                mainFrame.style.top = (targetY - state.size / 2) + 'px';
+            }
+
+            updateExpertUI();
+            checkerboardCanvas = null; // Cache temizle
+
+            if (state.paused) togglePause(); // Duraklatılmışsa başlat
+            else startDrawing();
+
+            saveState();
+        });
+
+
         // Mod seçimi
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelector('.mode-btn.active').classList.remove('active');
+                const currentActive = document.querySelector('.mode-btn.active');
+                if (currentActive) currentActive.classList.remove('active');
+
                 btn.classList.add('active');
                 state.mode = btn.dataset.mode;
-                state.colorCycleIndex = 0;
                 state.colorCycleFrame = 0;
+                state.autoModeIndex = 0;
+                state.autoDynFrame = 0;
+                state.autoDynTarget = 0;
+                state.autoDynMode = null;
+                state.testModeIndex = 0;
+                state.expertModeFrame = 0;
+                checkerboardCanvas = null; // reset
+
+                updateExpertUI();
+
                 startDrawing();
                 saveState();
             });
@@ -1003,17 +2007,67 @@
             hidePanelBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> Panel Gizle`;
         });
 
+        // Arka Plan Şeffaflık (Overlay Modu - Klavye ile tetiklenir)
+        function toggleBackground() {
+            state.bgTransparent = !state.bgTransparent;
+            if (state.bgTransparent) {
+                document.body.classList.add('bg-transparent');
+            } else {
+                document.body.classList.remove('bg-transparent');
+            }
+            saveState();
+        }
+
+        // T Tuşu ile Tüm UI gizleme
+        function toggleUI() {
+            state.uiHidden = !state.uiHidden;
+            if (state.uiHidden) {
+                document.body.classList.add('ui-hidden');
+                showUiHiddenIndicator();
+            } else {
+                document.body.classList.remove('ui-hidden');
+                document.getElementById('uiHiddenIndicator').classList.remove('show');
+            }
+        }
+
+        // Göz Koruması / Amber Modu (A Tuşu)
+        function toggleAmber() {
+            state.amberMode = !state.amberMode;
+            if (state.amberMode) {
+                document.body.classList.add('amber-mode');
+                // Transparent açıksa amber çalışmaz, bu yüzden uyar/kapat
+                if (state.bgTransparent) {
+                    toggleBackground(); // kapat
+                }
+            } else {
+                document.body.classList.remove('amber-mode');
+            }
+            saveState();
+        }
+
+        document.getElementById('amberBtn').addEventListener('click', toggleAmber);
+
         // ESC to exit fullscreen (handled natively) & keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // Sadece input veya select elementlerinde değilken çalışsın
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
             if (e.key === 'f' || e.key === 'F') toggleFullscreen();
             if (e.key === 'h' || e.key === 'H') hidePanelBtn.click();
+            if (e.key === 't' || e.key === 'T') toggleUI();
+            if (e.key === 'b' || e.key === 'B') toggleBackground();
+            if (e.key === 'a' || e.key === 'A') toggleAmber();
             if (e.key === ' ') { e.preventDefault(); togglePause(); }
             if (e.key === '+' || e.key === '=') document.getElementById('increaseCount').click();
             if (e.key === '-') document.getElementById('decreaseCount').click();
-            if (e.key === '1') selectMode('classic');
-            if (e.key === '2') selectMode('fast');
-            if (e.key === '3') selectMode('colorcycle');
-            if (e.key === '4') selectMode('bw');
+            if (e.key === '1') selectMode('auto');
+            if (e.key === '2') selectMode('classic');
+            if (e.key === '3') selectMode('fast');
+            if (e.key === '4') selectMode('colorcycle');
+            if (e.key === '5') selectMode('bw');
+            if (e.key === '6') selectMode('noise');
+            if (e.key === '7') selectMode('opposite');
+            if (e.key === '8') selectMode('test');
         });
 
         function selectMode(mode) {
@@ -1025,13 +2079,58 @@
         // INIT
         // ═══════════════════════════════════════════════════════
 
+        function setupEventListeners() {
+            const fpsSlider = document.getElementById('fpsSlider');
+            const fpsValueEl = document.getElementById('fpsValue');
+            if (fpsSlider) {
+                fpsSlider.addEventListener('input', () => {
+                    state.fps = parseInt(fpsSlider.value);
+                    fpsValueEl.textContent = state.fps + 'Hz';
+                    saveState();
+                });
+            }
+        }
+
         function init() {
             const restored = loadState();
+
+            // F5 veya ilk açılış: Mutlaka bir startTime belirlenmeli ki timer tık etsin.
+            state.startTime = Date.now();
+
+            // Initialize the paused state based on memory or default to playing
+            if (state.paused === undefined) state.paused = false;
 
             // Apply restored state to UI
             document.getElementById('countDisplay').textContent = state.count;
             document.getElementById('sizeSlider').value = state.size;
             document.getElementById('sizeValue').textContent = state.size + 'px';
+
+            // FPS DOM Düzeltmesi (Null Pointer crash engelleme)
+            const fpsS = document.getElementById('fpsSlider');
+            const fpsV = document.getElementById('fpsValue');
+            if (fpsS && fpsV) {
+                fpsS.value = state.fps || 144;
+                fpsV.textContent = (state.fps || 144) + 'Hz';
+            }
+
+            // FPS Dinleyicisini başlat
+            setupEventListeners();
+
+            const timerSelect = document.getElementById('timerStop');
+            if (timerSelect) timerSelect.value = state.timerMode || 0;
+
+            updateExpertUI();
+
+            if (state.bgTransparent) {
+                document.body.classList.add('bg-transparent');
+            }
+            if (state.amberMode) {
+                document.body.classList.add('amber-mode');
+            }
+
+            if (state.epilepsyAccepted) {
+                document.getElementById('epilepsyWarning').style.display = 'none';
+            }
 
             // Set active mode button
             const activeBtn = document.querySelector('.mode-btn.active');
@@ -1039,8 +2138,10 @@
             const modeBtn = document.querySelector(`.mode-btn[data-mode="${state.mode}"]`);
             if (modeBtn) modeBtn.classList.add('active');
 
-            state.startTime = Date.now();
             rebuildCanvasFrames();
+
+            // Timer döngüsünü kalıcı olarak başlat (Ama hemen duraklatacağız)
+            if (state.timerInterval) clearInterval(state.timerInterval);
             state.timerInterval = setInterval(updateTimer, 1000);
             updateTimer();
 
@@ -1049,6 +2150,11 @@
 
             // Save on page unload
             window.addEventListener('beforeunload', saveState);
+
+            // SADECE BUNU EKLİYORUZ: Başlangıçta zaman ve işlem duraklatılmış olsun.
+            // Kullanıcı "Başlat" butonuna tıklamadan süre işlemesin ve onarım başlamasın.
+            state.paused = false; // togglePause'un Pause bloğunu çalıştırması için false diyoruz
+            togglePause();
         }
 
         init();
