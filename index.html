@@ -646,27 +646,20 @@
 
         <div class="separator"></div>
 
-        <!-- Hız / Hertz / FPS -->
-        <div class="control-group">
-            <div class="control-label">Renk Geçiş Hızı (Hz)</div>
-            <div class="slider-wrapper">
-                <input type="range" id="fpsSlider" min="10" max="100" value="60" step="5">
-                <span class="slider-value" id="fpsValue">60Hz</span>
-            </div>
-        </div>
 
-        <div class="separator"></div>
 
         <!-- Mod Seçimi -->
         <div class="control-group">
             <div class="control-label">Çözme Modu</div>
             <div class="mode-grid">
+                <button class="mode-btn" data-mode="auto">🚀 Tam Otomatik</button>
                 <button class="mode-btn active" data-mode="classic">⚡ Klasik</button>
                 <button class="mode-btn" data-mode="fast">🚀 Hızlı</button>
                 <button class="mode-btn" data-mode="colorcycle">🌈 Renk Döngüsü</button>
                 <button class="mode-btn" data-mode="bw">◐ Siyah-Beyaz</button>
                 <button class="mode-btn" data-mode="noise">📺 Karıncalanma</button>
                 <button class="mode-btn" data-mode="opposite">🔄 Zıt Renkler</button>
+                <button class="mode-btn" data-mode="test">🔍 Piksel Testi</button>
             </div>
         </div>
 
@@ -689,8 +682,8 @@
         <!-- Timer -->
         <div class="control-group">
             <div class="control-label">Çalışma Süresi</div>
-            <div class="timer-display" id="timerDisplay">00:00</div>
-            <div class="timer-label">DAKİKA : SANİYE</div>
+            <div class="timer-display" id="timerDisplay">00:00:00</div>
+            <div class="timer-label">SAAT : DAKİKA : SANİYE</div>
         </div>
     </div>
 
@@ -749,7 +742,6 @@
             intervals: [],
             count: 1,
             size: 256,
-            fps: 60, // Default 60Hz
             mode: 'classic',
             timerMode: 0, // 0 means continuous, otherwise minutes
             bgTransparent: false,
@@ -762,16 +754,21 @@
             paused: false,
             colorCycleIndex: 0,
             colorCycleFrame: 0,
-            oppositeToggle: false
+            oppositeToggle: false,
+            autoModeIndex: 0,
+            autoModeFrame: 0,
+            testModeIndex: 0
         };
 
         const MODES = {
+            auto: { label: 'Tam Otomatik' },
             classic: { label: 'Klasik' },
             fast: { label: 'Hızlı' },
             colorcycle: { label: 'Renk Döngüsü' },
             bw: { label: 'Siyah-Beyaz' },
             noise: { label: 'Karıncalanma' },
-            opposite: { label: 'Zıt Renkler' }
+            opposite: { label: 'Zıt Renkler' },
+            test: { label: 'Piksel Testi' }
         };
 
         const COLORS_CYCLE = [
@@ -900,13 +897,35 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
+        // Sabit Renkler (Test Modu)
+        const TEST_COLORS = ['#FF0000', '#00FF00', '#0000FF', '#FFFFFF', '#000000'];
+        function drawTest(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = TEST_COLORS[state.testModeIndex % TEST_COLORS.length];
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Tam Otomatik Mod (Modlar arası döngü)
+        const AUTO_MODES = [drawClassic, drawNoise, drawOpposite, drawColorCycle];
+        function drawAuto(canvas) {
+            // Saniyede 60 frame (16ms interval) varsaydığımızda, 10 saniye = 600 frame
+            state.autoModeFrame++;
+            if (state.autoModeFrame >= 600) {
+                state.autoModeFrame = 0;
+                state.autoModeIndex = (state.autoModeIndex + 1) % AUTO_MODES.length;
+            }
+            AUTO_MODES[state.autoModeIndex](canvas);
+        }
+
         function getDrawFunction() {
             switch (state.mode) {
+                case 'auto': return drawAuto;
                 case 'fast': return drawFast;
                 case 'colorcycle': return drawColorCycle;
                 case 'bw': return drawBlackWhite;
                 case 'noise': return drawNoise;
                 case 'opposite': return drawOpposite;
+                case 'test': return drawTest;
                 default: return drawClassic;
             }
         }
@@ -972,6 +991,14 @@
                 frame.style.zIndex = '';
             });
 
+            // Tıklama ile Test Modunda renk değiştirme
+            frame.addEventListener('click', () => {
+                if (state.mode === 'test') {
+                    state.testModeIndex++;
+                    startDrawing(); // Ekranı hemen güncellemek için tetikle
+                }
+            });
+
             document.getElementById('fixScreen').appendChild(frame);
             return { frame, canvas };
         }
@@ -984,10 +1011,20 @@
             if (state.paused) return;
 
             const drawFn = getDrawFunction();
-            // Calculate interval in ms from FPS/Hz target
-            let interval = Math.floor(1000 / state.fps);
+            // Sabit 16ms interval (~60fps) en agresif uyarı için.
+            let interval = 16;
+
+            // Eğer test modu ise, interval gereksiz. İlk çizimi yapıp bırak.
+            if (state.mode === 'test') {
+                state.canvasFrames.forEach(({ canvas }) => {
+                    drawFn(canvas);
+                });
+                return;
+            }
+
+            // Hızlı modu eskisi gibi daha agresif tutabiliriz: 10ms (~100fps maksimum)
             if (state.mode === 'fast') {
-                interval = Math.floor(interval / 2); // Fast modu 2 kat hızlandırır
+                interval = 10;
             }
 
             state.canvasFrames.forEach(({ canvas }) => {
@@ -1043,9 +1080,11 @@
 
         function updateTimer() {
             const elapsed = getElapsedSeconds();
-            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const hours = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+            const minutes = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
             const seconds = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('timerDisplay').textContent = `${minutes}:${seconds}`;
+
+            document.getElementById('timerDisplay').textContent = `${hours}:${minutes}:${seconds}`;
 
             // Auto-stop logic
             if (state.timerMode > 0 && !state.paused) {
@@ -1105,7 +1144,6 @@
             const data = {
                 count: state.count,
                 size: state.size,
-                fps: state.fps,
                 mode: state.mode,
                 timerMode: state.timerMode,
                 bgTransparent: state.bgTransparent,
@@ -1123,7 +1161,6 @@
                 const data = JSON.parse(raw);
                 if (data.count) state.count = Math.min(6, Math.max(1, data.count));
                 if (data.size) state.size = Math.min(512, Math.max(64, data.size));
-                if (data.fps) state.fps = Math.min(200, Math.max(10, data.fps));
                 if (data.mode && MODES[data.mode]) state.mode = data.mode;
                 if (data.timerMode !== undefined) state.timerMode = data.timerMode;
                 if (data.bgTransparent !== undefined) state.bgTransparent = data.bgTransparent;
@@ -1211,18 +1248,6 @@
             saveState();
         });
 
-        // FPS slider
-        const fpsSlider = document.getElementById('fpsSlider');
-        const fpsValueEl = document.getElementById('fpsValue');
-
-        fpsSlider.addEventListener('input', () => {
-            const val = parseInt(fpsSlider.value);
-            fpsValueEl.textContent = val + 'Hz';
-            state.fps = val;
-            startDrawing(); // Restart intervals with new speed
-            saveState();
-        });
-
         // Timer dropdown
         const timerStopSelect = document.getElementById('timerStop');
         timerStopSelect.addEventListener('change', () => {
@@ -1236,8 +1261,11 @@
                 document.querySelector('.mode-btn.active').classList.remove('active');
                 btn.classList.add('active');
                 state.mode = btn.dataset.mode;
-                state.colorCycleIndex = 0;
                 state.colorCycleFrame = 0;
+                state.autoModeIndex = 0;
+                state.autoModeFrame = 0;
+                state.testModeIndex = 0;
+
                 startDrawing();
                 saveState();
             });

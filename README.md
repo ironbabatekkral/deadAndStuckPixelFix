@@ -16,14 +16,14 @@
 | 🎯 **Sürüklenebilir Kare** | Piksel onarıcıyı sorunlu pikselin üzerine sürükleyin |
 | 📐 **Boyut Ayarı** | 64px – 512px arası slider ile boyutlandırma |
 | ➕ **Çoklu Kare** | 1-6 arası kare ile aynı anda birden fazla pikseli onarın |
-| 🎛️ **Hız (Hz) Kontrolü** | 10Hz ile 100Hz arası flaş hızı ayarı |
+| 🚀 **Tam Otomatik Mod** | Özel çözme algoritmaları arasında otomatik geçiş yapar |
 | ⚡ **Klasik Mod** | Rastgele RGB piksel flash (JScreenFix algoritması) |
-| 🚀 **Hızlı Mod** | 2x hızda piksel stimülasyonu |
+| 🚀 **Hızlı Mod** | Agresif (10ms) piksel stimülasyonu |
 | 🌈 **Renk Döngüsü** | Kırmızı → Yeşil → Mavi → Beyaz → Siyah döngüsü |
 | ◐ **Siyah-Beyaz** | Yalnızca siyah/beyaz flash |
 | 📺 **Karıncalanma** | Eski TV'lerdeki gibi statik siyah-beyaz noise |
 | 🔄 **Zıt Renkler** | Kırmızı/Cyan, Yeşil/Magenta, Sarı/Mavi geçişi |
-| ⏸️ **Duraklat / Devam** | Onarımı istediğiniz zaman durdurup devam ettirin |
+| 🔍 **Piksel Testi** | Yanıp sönme olmadan sabit renklerde ölü piksel arama |
 | ⏱️ **Zamanlayıcı (Auto-stop)** | 5, 10, 20 veya 60 dk sonra otomatik durdurma |
 | 🔲 **Şeffaf Arkaplan (Overlay)**| Sadece onarıcı kareyi bırakıp arkada çalışmaya devam edin |
 | 👁️ **Arayüz (UI) Gizleme**| Onarım yaparken dikkat dağıtan tüm menüleri tamamen saklayın |
@@ -40,7 +40,7 @@
 | `T` | **Tüm Kullanıcı Arayüzünü Gizle/Göster** |
 | `B` | **Şeffaf Arkaplan Modunu Aç/Kapat (Overlay)** |
 | `+` / `-` | Kare Sayısı Artır/Azalt |
-| `1` `2` `3` `4` `5` `6` | Mod Seçimi |
+| `1`-`8` | Mod Seçimi |
 
 ## 🚀 Kullanım
 
