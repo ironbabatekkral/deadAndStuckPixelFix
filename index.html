@@ -1387,6 +1387,9 @@
                 frame.style.zIndex = 100;
                 frame.setPointerCapture(e.pointerId);
                 hideDragTip();
+
+                // Animasyon sürüklemeyi bozduğu için taşıma anında titreşimi kes
+                frame.classList.remove('running');
             });
 
             frame.addEventListener('pointermove', (e) => {
@@ -1400,11 +1403,18 @@
             frame.addEventListener('pointerup', () => {
                 isDragging = false;
                 frame.style.zIndex = '';
+                // Test devam ediyorsa sarsıntıyı geri başlat
+                if (!state.paused && state.mode !== 'test') {
+                    frame.classList.add('running');
+                }
             });
 
             frame.addEventListener('lostpointercapture', () => {
                 isDragging = false;
                 frame.style.zIndex = '';
+                if (!state.paused && state.mode !== 'test') {
+                    frame.classList.add('running');
+                }
             });
 
             // Tıklama ile Test Modunda renk değiştirme
@@ -1438,14 +1448,19 @@
 
             // Eğer test modu ise, interval gereksiz. İlk çizimi yapıp bırak.
             if (state.mode === 'test') {
-                state.canvasFrames.forEach(({ canvas }) => {
+                state.canvasFrames.forEach(({ canvas, frame }) => {
+                    frame.classList.remove('running'); // Test modunda sarsıntı olmasın
                     drawFn(canvas);
                 });
                 return;
             }
 
+            // Normal modlarda sarsıntıyı (Kinematic Vibration) başlat
+            state.canvasFrames.forEach(({ frame }) => {
+                frame.classList.add('running');
+            });
+
             // Fast modu için, her requestAnimationFrame frame'inde 2 kez renk çizebiliriz 
-            // Veya sadece standart donanım senkronu (rAF) bırakabiliriz çünkü rAF zaten GPU ile senkrondur
             let drawLoop = (canvas) => {
                 if (state.mode === 'fast') {
                     drawFn(canvas); // Double flush logic for ultra fast
@@ -1508,6 +1523,8 @@
 
         function getElapsedSeconds() {
             if (state.paused) return state.elapsedBeforePause;
+            // Eğer sayfa yeni yüklendi ama startTime undefined ise o anı baz al
+            if (!state.startTime) state.startTime = Date.now();
             return state.elapsedBeforePause + Math.floor((Date.now() - state.startTime) / 1000);
         }
 
@@ -1547,6 +1564,9 @@
                 state.animationFrames.forEach(id => cancelAnimationFrame(id));
                 state.animationFrames = [];
                 clearInterval(state.timerInterval);
+
+                // Sarsıntıyı kes
+                state.canvasFrames.forEach(({ frame }) => frame.classList.remove('running'));
 
                 pauseBtn.classList.add('paused');
                 pauseIcon.style.display = 'none';
@@ -1599,7 +1619,10 @@
                 if (data.timerMode !== undefined) state.timerMode = data.timerMode;
                 if (data.bgTransparent !== undefined) state.bgTransparent = data.bgTransparent;
                 if (data.epilepsyAccepted !== undefined) state.epilepsyAccepted = data.epilepsyAccepted;
+
+                // Zamanı sıfırlayarak başlat (F5 yenilemesinde süre kaldığı yerden devam etsin ama saçmalamasın)
                 if (data.elapsedSeconds) state.elapsedBeforePause = data.elapsedSeconds;
+                else state.elapsedBeforePause = 0;
 
                 // Expert Color Load
                 if (data.expertColor) {
@@ -1965,6 +1988,7 @@
         // ═══════════════════════════════════════════════════════
 
         function init() {
+            state.startTime = Date.now(); // F5'ten hemen sonra süreyi başlat
             const restored = loadState();
 
             // Apply restored state to UI
@@ -1996,8 +2020,10 @@
             const modeBtn = document.querySelector(`.mode-btn[data-mode="${state.mode}"]`);
             if (modeBtn) modeBtn.classList.add('active');
 
-            state.startTime = Date.now();
             rebuildCanvasFrames();
+
+            // Timer döngüsünü kalıcı olarak başlat
+            if (state.timerInterval) clearInterval(state.timerInterval);
             state.timerInterval = setInterval(updateTimer, 1000);
             updateTimer();
 
