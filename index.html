@@ -1557,7 +1557,6 @@
 
         function getElapsedSeconds() {
             if (state.paused) return state.elapsedBeforePause;
-            // Eğer sayfa yeni yüklendi ama startTime undefined ise o anı baz al
             if (!state.startTime) state.startTime = Date.now();
             return state.elapsedBeforePause + Math.floor((Date.now() - state.startTime) / 1000);
         }
@@ -1654,9 +1653,13 @@
                 if (data.bgTransparent !== undefined) state.bgTransparent = data.bgTransparent;
                 if (data.epilepsyAccepted !== undefined) state.epilepsyAccepted = data.epilepsyAccepted;
 
-                // Zamanı sıfırlayarak başlat (F5 yenilemesinde süre kaldığı yerden devam etsin ama saçmalamasın)
-                if (data.elapsedSeconds) state.elapsedBeforePause = data.elapsedSeconds;
-                else state.elapsedBeforePause = 0;
+                // F5 Yenilemesinde süreyi dondurulmuş (elapsed) olarak yükle,
+                // init fonksiyonu startTime'ı Date.now() yapıp sayacı devam ettirecek.
+                if (data.elapsedSeconds) {
+                    state.elapsedBeforePause = data.elapsedSeconds;
+                } else {
+                    state.elapsedBeforePause = 0;
+                }
 
                 // Expert Color Load
                 if (data.expertColor) {
@@ -2021,8 +2024,13 @@
         // ═══════════════════════════════════════════════════════
 
         function init() {
-            state.startTime = Date.now(); // F5'ten hemen sonra süreyi başlat
             const restored = loadState();
+
+            // F5 veya ilk açılış: Mutlaka bir startTime belirlenmeli ki timer tık etsin.
+            state.startTime = Date.now();
+
+            // Initialize the paused state based on memory or default to playing
+            if (state.paused === undefined) state.paused = false;
 
             // Apply restored state to UI
             document.getElementById('countDisplay').textContent = state.count;
