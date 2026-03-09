@@ -1267,65 +1267,65 @@
 
             state.expertModeFrame++;
 
-            // Expert modu 3 aşamadan (state) oluşan bir döngüdür
-            // State 0: Complementary High-Freq Strobing (Sarı-Siyah şok) - 3 saniye (~180 frame)
-            // State 1: Micro-Shift Checkerboard (Dama kaydırma) - 3 saniye (~180 frame)
-            // State 2: Sine-Wave Voltage Scan (Yumuşak Parlaklık Dalgalanması) - 4 saniye (~240 frame)
-
+            // Phase 6 Hyper-Shock Engine: 3 Aşama fakat çok daha agresif
             if (state.expertModeFrame > 600) {
                 state.expertModeFrame = 0;
             }
 
             if (state.expertModeFrame < 180) {
-                // State 0: Complementary Shock
-                // Saniye bazlı aç-kapa agresifliği (rAF hızıyla)
-                const isShock = state.expertModeFrame % 2 === 0;
+                // State 0: Hyper-Strobing (Ekstrem Göz Kırpma)
+                // Önceden % 2 === 0 ile statik bir hızdı. Şimdi çok keskin flaşlar için (frame % 4 < 2) 
+                // Donanım 144Hz ise saniyede tam 36 kez tam güç patlama
+                const isShock = (state.expertModeFrame % 4) < 2;
                 ctx.fillStyle = isShock ? targetColor.hex : '#000000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             } else if (state.expertModeFrame < 360) {
-                // State 1: Micro-Shift Checkerboard
-                if (state.expertModeFrame === 180) checkerboardCanvas = null; // Re-cache if color changed
+                // State 1: Spatial Earthquake (Mikro-Deprem)
+                if (state.expertModeFrame === 180) checkerboardCanvas = null;
                 const cb = getCheckerboard();
 
-                // Her frame'de dama tahtasını 1px x ve 1px y ekseninde kaydırarak komşu manyetik çekim (Spatial Pull) yarat
-                const shiftAmt = (state.expertModeFrame % 16);
+                // Önceden stabil kayan dama tahtası şimdi kaotik bir şekilde X ve Y'de titriyor
+                const jitterX = (Math.random() * 10 - 5); // -5 ile +5 piksel arası anlık sıçrama
+                const jitterY = (Math.random() * 10 - 5);
+
                 ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height); // Arkaplan temizle
-                ctx.drawImage(cb, -shiftAmt, -shiftAmt); // offsetX, offsetY
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(cb, jitterX, jitterY);
 
             } else {
-                // State 2: Sine Wave Voltage Scan
-                // Math.sin ile yumuşak ama çok hızlı potansiyel fark taraması
-                // rgba(r, g, b, alpha_sine) kullanarak monitör içindeki voltaj değerlerini 0-255 arası gezeriz
-                // sin dalgası -1 ile 1 arasıdır, (sin + 1)/2 ile 0-1 arası opacity buluruz.
-
-                // Frekansı yüksek tutalım:
-                const timeStr = Date.now() / 80;
+                // State 2: Sine Wave Voltage Scan + Thermal White Noise Injection
+                const timeStr = Date.now() / 30; // Çok daha hızlı dalgalanma (Eskiden 80'di)
                 const sineVal = (Math.sin(timeStr) + 1) / 2; // 0.0 to 1.0
 
                 // Zemin siyah
                 ctx.fillStyle = '#000000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Üstüne Saydam Şok Rengi
-                ctx.fillStyle = `rgba(${targetColor.rgb}, ${sineVal})`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Thermal Injection: Dalganın tam tepe noktalarında (%95+), anlık BEYAZ FLAŞ (Isı Şoku)
+                if (sineVal > 0.95 && Math.random() > 0.5) {
+                    ctx.fillStyle = '#FFFFFF'; // Tam 255 beyaz
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                } else {
+                    // Normal voltaj taraması
+                    ctx.fillStyle = `rgba(${targetColor.rgb}, ${sineVal})`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
             }
         }
 
-        // Tam Otomatik Mod (Modlar arası Rastgele AI-like Agresif Döngü)
-        const AUTO_ROSTER = [drawClassic, drawNoise, drawOpposite, drawExpert]; // Colorcycle vb. kaldırdık, saf güç
+        // Tam Otomatik Mod (Kaotik AI-like Agresif Döngü)
+        const AUTO_ROSTER = [drawClassic, drawNoise, drawOpposite, drawExpert];
         function drawAuto(canvas) {
-            // Eğer yeni bir döngüde isek, hedefleri randomize et
+            // Eğer yeni bir döngüde isek, hedefleri randomize et (Phase 6: Daha kısa, daha vahşi)
             if (state.autoDynFrame >= state.autoDynTarget || state.autoDynMode === null) {
                 state.autoDynFrame = 0;
                 // Rastgele mod
                 const modIdx = Math.floor(Math.random() * AUTO_ROSTER.length);
                 state.autoDynMode = AUTO_ROSTER[modIdx];
-                // Rastgele süre (60fps baz alınarak: 1 saniye ila 5 saniye rastgele bir patlama)
-                // Kısa ve rastgele olması kristallerin uyum sağlamasını zorlaştırır
-                state.autoDynTarget = Math.floor(Math.random() * 240) + 60; // 60 to 300 frames (1-5 sn)
+
+                // Saliselerle değişen (30 frame = ~0.5 sn) ile (180 frame = ~3 sn) arası kaotik patlamalar
+                state.autoDynTarget = Math.floor(Math.random() * 150) + 30;
             }
 
             state.autoDynFrame++;
